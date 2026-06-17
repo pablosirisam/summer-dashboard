@@ -9,13 +9,16 @@ import Countdown from '@/components/Countdown'
 export const revalidate = 0
 
 export default async function Home() {
-  const logs    = await getAllLogs()
-  const today   = format(new Date(), 'yyyy-MM-dd')
+  const logs = await getAllLogs()
+
+  // Use Spain time (CEST = UTC+2) so midnight in Madrid doesn't show the wrong day
+  const utcNow   = new Date()
+  const spainNow = new Date(utcNow.getTime() + 2 * 60 * 60 * 1000)
+  const today    = format(spainNow, 'yyyy-MM-dd')
   const todayLog = logs.find(l => l.log_date === today) ?? null
 
   const days = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']
-  const now  = new Date()
-  const dateLabel = `${days[now.getDay()]} ${format(now, 'd MMM yyyy').toUpperCase()}`
+  const dateLabel = `${days[spainNow.getDay()]} ${format(spainNow, 'd MMM yyyy').toUpperCase()}`
 
   return (
     <main className="page">
