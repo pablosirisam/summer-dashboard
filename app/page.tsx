@@ -1,13 +1,13 @@
-import { Sparkles, Target, CalendarRange, Activity } from 'lucide-react'
+import { Target, CalendarRange, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 import { getAllLogs } from '@/lib/supabase'
 import {
-  getDaysRemaining, getDaysElapsed, getSummerProgress,
-  TOTAL_DAYS, spainToday,
+  getDaysRemaining, getDaysElapsed, getSummerProgress, TOTAL_DAYS, spainToday,
 } from '@/lib/utils'
+import CinematicHero from '@/components/CinematicHero'
 import Countdown from '@/components/Countdown'
 import ObjectiveCard from '@/components/ObjectiveCard'
 import HeatmapGrid from '@/components/HeatmapGrid'
-import Timeline from '@/components/Timeline'
 
 export const revalidate = 0
 
@@ -28,47 +28,36 @@ export default async function Home() {
 
   return (
     <>
-      <div className="aurora"><div className="aurora-blob" /></div>
-      <div className="grid-overlay" />
+      <CinematicHero remaining={remaining} elapsed={elapsed} total={TOTAL_DAYS} dateLabel={dateLabel} />
 
-      <main className="page">
-        <div className="topbar">
-          <div className="brand">
-            <div className="brand-mark"><Sparkles size={20} strokeWidth={2.2} /></div>
-            <div>
-              <div className="brand-name">Siri · Verano</div>
-              <div className="brand-sub">IA · Alimentación · Deporte</div>
-            </div>
+      <div className="overview">
+        <main className="page">
+          <Countdown remaining={remaining} total={TOTAL_DAYS} elapsed={elapsed} progress={progress} />
+
+          <div className="sec-head">
+            <span className="sec-title"><span className="ic"><Target size={15} /></span>Objetivos del verano</span>
+            <span className="sec-line" />
           </div>
-          <div className="topdate"><span className="live-dot" />{dateLabel}</div>
-        </div>
+          <div className="cards">
+            <ObjectiveCard type="ia" logs={logs} index={0} />
+            <ObjectiveCard type="food" logs={logs} index={1} />
+            <ObjectiveCard type="sport" logs={logs} index={2} />
+          </div>
 
-        <Countdown remaining={remaining} total={TOTAL_DAYS} elapsed={elapsed} progress={progress} />
+          <div className="sec-head">
+            <span className="sec-title"><span className="ic"><CalendarRange size={15} /></span>Mapa del verano</span>
+            <span className="sec-line" />
+          </div>
+          <HeatmapGrid logs={logs} interactive />
 
-        <div className="sec-head">
-          <span className="sec-title"><span className="ic"><Target size={15} /></span>Objetivos del verano</span>
-          <span className="sec-line" />
-        </div>
-        <div className="cards">
-          <ObjectiveCard type="ia" logs={logs} index={0} />
-          <ObjectiveCard type="food" logs={logs} index={1} />
-          <ObjectiveCard type="sport" logs={logs} index={2} />
-        </div>
+          <Link href="/historial" className="big-link">
+            <span>Ver el registro diario completo</span>
+            <ArrowRight size={17} strokeWidth={2.2} />
+          </Link>
 
-        <div className="sec-head">
-          <span className="sec-title"><span className="ic"><CalendarRange size={15} /></span>Summer Map</span>
-          <span className="sec-line" />
-        </div>
-        <HeatmapGrid logs={logs} />
-
-        <div className="sec-head">
-          <span className="sec-title"><span className="ic"><Activity size={15} /></span>Registro diario</span>
-          <span className="sec-line" />
-        </div>
-        <Timeline logs={logs} />
-
-        <div className="footer">SIRI · VERANO 2026 — 18 JUN → 1 SEP · datos en vivo desde Supabase</div>
-      </main>
+          <div className="footer">SIRI · VERANO 2026 — 18 JUN → 1 SEP · datos en vivo desde Supabase</div>
+        </main>
+      </div>
     </>
   )
 }
