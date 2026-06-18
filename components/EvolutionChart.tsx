@@ -32,10 +32,19 @@ export default function EvolutionChart({ data, accent, glow, unit, yMax }: Props
       ? `${line} L ${pts[pts.length - 1].cx.toFixed(1)} ${PAD.t + innerH} L ${pts[0].cx.toFixed(1)} ${PAD.t + innerH} Z`
       : ''
     // gridlines
-    const gx = [0, 0.25, 0.5, 0.75, 1].map(f => ({
-      y: PAD.t + innerH - f * innerH,
-      v: Math.round(f * max * 10) / 10,
-    }))
+    const niceStep = (mx: number) => {
+      const raw = mx / 4
+      const pow = Math.pow(10, Math.floor(Math.log10(raw || 1)))
+      const n = raw / pow
+      const step = (n >= 5 ? 5 : n >= 2 ? 2 : n >= 1 ? 1 : 0.5) * pow
+      return step || 1
+    }
+    const step = niceStep(max)
+    const lines = Math.floor(max / step + 0.001) + 1
+    const gx = Array.from({ length: lines }, (_, i) => {
+      const v = i * step
+      return { y: PAD.t + innerH - (v / max) * innerH, v: Math.round(v * 10) / 10 }
+    })
     return { pts, area, line, max, gx }
   }, [data, yMax])
 
