@@ -160,6 +160,32 @@ export function getBestDay(logs: DailyLog[], type: ObjType): SeriesPoint | null 
   return series.reduce((best, p) => (p.value > best.value ? p : best), series[0])
 }
 
+/** Days where the objective's metric was actually > 0 (real activity, not pass/fail). */
+export function getActiveDays(logs: DailyLog[], type: ObjType): number {
+  return getSeries(logs, type).filter(p => p.value > 0).length
+}
+
+export interface Trend { dir: 'up' | 'down' | 'flat'; pct: number }
+
+/**
+ * Momentum of a "tracking-to-improve" objective (IA / comida): mean of the last
+ * `window` active days vs the `window` active days before them. For every metric
+ * here, higher = better, so dir:'up' is always good. Null when there isn't enough
+ * history to claim a trend honestly.
+ */
+export function getMetricTrend(logs: DailyLog[], type: ObjType, window = 7): Trend | null {
+  const active = getSeries(logs, type).filter(p => p.value > 0)
+  if (active.length < 4) return null
+  const recent = active.slice(-window)
+  const prior = active.slice(-window * 2, -window)
+  if (!prior.length) return null
+  const mean = (a: SeriesPoint[]) => a.reduce((s, p) => s + p.value, 0) / a.length
+  const r = mean(recent), p = mean(prior)
+  if (p === 0) return null
+  const pct = Math.round(((r - p) / p) * 100)
+  return { dir: pct > 5 ? 'up' : pct < -5 ? 'down' : 'flat', pct }
+}
+
 export function formatLogDateFull(dateStr: string): string {
   const [, m, d] = dateStr.split('-').map(Number)
   const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
