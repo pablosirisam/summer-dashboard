@@ -39,7 +39,12 @@ export const viewport: Viewport = {
 }
 
 async function buildSnap(): Promise<TickerSnap | null> {
-  const logs = await getAllLogs()
+  let logs
+  try {
+    logs = await getAllLogs()
+  } catch {
+    return null // sin credenciales en build: el tape simplemente no aparece
+  }
   if (!logs.length) return null
   const today = spainToday()
   const log = logs.find(l => l.log_date === today) ?? logs[0]
