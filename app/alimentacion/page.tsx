@@ -1,9 +1,10 @@
-import { getAllLogs } from '@/lib/supabase'
-import ObjectiveDetail from '@/components/ObjectiveDetail'
+import { getMeals } from '@/lib/supabase'
+import FoodLog from '@/components/FoodLog'
 
 export const revalidate = 0
 
 export default async function AlimentacionPage() {
-  const logs = await getAllLogs()
-  return <ObjectiveDetail type="food" logs={logs} />
+  const meals = await getMeals()
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' }) // yyyy-MM-dd
+  return <FoodLog meals={meals} today={today} />
 }

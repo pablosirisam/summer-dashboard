@@ -500,3 +500,72 @@ b { font-weight: 600; color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* ── FOOD LOG · Alimentación ──────────────────────────────── */
+.fl-today {
+  position: relative; overflow: hidden; margin-top: 18px;
+  border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px;
+  background: linear-gradient(180deg, rgba(16,217,139,0.08), rgba(10,12,26,0.45));
+}
+.fl-today-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.fl-today-head .dt-panel-title svg { color: var(--food-2); }
+.fl-today-count { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.fl-today-grid { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; }
+.fl-today-kcal { display: flex; align-items: baseline; gap: 6px; }
+.fl-today-kcal .v { font-weight: 800; font-size: clamp(40px, 7vw, 58px); color: var(--food-2); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.fl-today-kcal .u { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
+.fl-today-macros { flex: 1; min-width: 240px; }
+.fl-today-empty { color: var(--ink-3); font-size: 13.5px; }
+
+.fl-macrobar { display: flex; height: 9px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,0.06); }
+.fl-macrobar .seg { height: 100%; }
+.fl-macrobar .seg.p { background: linear-gradient(90deg, #10d98b, #38e6a6); }
+.fl-macrobar .seg.c { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.fl-macrobar .seg.f { background: linear-gradient(90deg, #fb923c, #fbbf24); }
+.fl-macros { display: flex; gap: 26px; margin-top: 14px; }
+.fl-macro { display: flex; flex-direction: column; gap: 2px; }
+.fl-macro b { font-family: var(--mono); font-weight: 700; font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fl-macro b i { font-style: normal; font-size: 11px; color: var(--ink-3); margin-left: 1px; }
+.fl-macro span { font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+.fl-macro.p b { color: #38e6a6; }
+.fl-macro.c b { color: #818cf8; }
+.fl-macro.f b { color: #fbbf24; }
+
+.fl-stars { display: inline-flex; gap: 2px; line-height: 0; }
+.fl-stars svg { color: rgba(255,255,255,0.2); }
+.fl-stars svg.on { color: var(--food-2); }
+
+.fl-days { display: flex; flex-direction: column; gap: 32px; }
+.fl-dayhead { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.fl-daydate { display: flex; align-items: baseline; gap: 9px; }
+.fl-daydate .d { font-weight: 700; font-size: 15px; color: var(--ink); }
+.fl-daydate .wd { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.fl-daychips { display: flex; gap: 6px; flex-wrap: wrap; }
+.fl-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10.5px; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--ink-3); }
+.fl-chip.kcal { color: var(--food-2); border-color: rgba(var(--food-glow), 0.35); background: rgba(var(--food-glow), 0.08); }
+.fl-chip.p { color: #38e6a6; }
+.fl-chip.c { color: #818cf8; }
+.fl-chip.f { color: #fbbf24; }
+
+.fl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.fl-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(180deg, rgba(20,22,42,0.5), rgba(10,12,26,0.45)); transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s; }
+.fl-card:hover { transform: translateY(-4px); border-color: rgba(var(--food-glow), 0.4); box-shadow: 0 24px 50px -32px rgba(var(--food-glow), 0.5); }
+.fl-photo { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--panel-2); }
+.fl-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+.fl-card:hover .fl-photo img { transform: scale(1.05); }
+.fl-noimg { width: 100%; height: 100%; display: grid; place-items: center; color: var(--ink-3); }
+.fl-rate { position: absolute; left: 10px; bottom: 10px; padding: 5px 8px; border-radius: 99px; background: rgba(6,7,16,0.72); backdrop-filter: blur(6px); border: 1px solid var(--line-2); }
+.fl-kcalbadge { position: absolute; right: 10px; top: 10px; display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 11px; font-weight: 600; color: #fff; padding: 4px 8px; border-radius: 99px; background: rgba(6,7,16,0.72); backdrop-filter: blur(6px); border: 1px solid var(--line-2); }
+.fl-kcalbadge svg { color: var(--food-2); }
+.fl-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.fl-time { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-3); }
+.fl-desc { font-size: 14.5px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.fl-cardmacros { display: flex; gap: 6px; }
+.fl-cardmacros .m { font-family: var(--mono); font-size: 10.5px; padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.05); }
+.fl-cardmacros .m.p { color: #38e6a6; }
+.fl-cardmacros .m.c { color: #818cf8; }
+.fl-cardmacros .m.f { color: #fbbf24; }
+.fl-comment { font-size: 12.5px; color: var(--ink-2); font-style: italic; line-height: 1.5; }
+
+@media (max-width: 860px) { .fl-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .fl-grid { grid-template-columns: 1fr; } .fl-today-grid { gap: 18px; } .fl-macros { gap: 18px; } }

@@ -16,3 +16,18 @@ export interface DailyLog {
 }
 
 export type ObjectiveType = 'ia' | 'food' | 'sport'
+
+export interface Meal {
+  id: string
+  meal_date: string        // yyyy-MM-dd
+  meal_time: string        // ISO timestamp
+  description: string
+  kcal: number | null
+  protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
+  rating: number | null    // 1-5
+  comment: string | null
+  photo_url: string | null
+  created_at: string
+}
