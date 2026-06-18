@@ -92,6 +92,14 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
   const avgRating = rated.length ? rated.reduce((s, m) => s + (m.rating ?? 0), 0) / rated.length : 0
   const avgKcal = groups.length ? Math.round(sum(meals).kcal / groups.length) : 0
 
+  const todayRated = todayMeals.filter(m => m.rating != null)
+  const todayRating = todayRated.length ? todayRated.reduce((s, m) => s + (m.rating ?? 0), 0) / todayRated.length : 0
+  const verdict =
+    todayRating >= 4.5 ? 'Día impecable. Así se construye el físico.'
+    : todayRating >= 3.5 ? 'Buen día en general. Mantén el nivel.'
+    : todayRating >= 2.5 ? 'Mejorable. Demasiada concesión.'
+    : 'Flojo. Hoy la comida no acompaña a tu meta.'
+
   const stats = [
     { icon: Flame, v: `${streak}`, k: 'racha de días', sub: streak > 0 ? 'registrando sin fallar' : 'empieza hoy' },
     { icon: Camera, v: `${meals.length}`, k: 'comidas en foto', sub: `${groups.length} días` },
@@ -133,12 +141,17 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
               <div className="fl-today-kcal">
                 <span className="v">{todayTot.kcal}</span>
                 <span className="u">kcal</span>
+                <div className="fl-today-rate">
+                  <Stars value={Math.round(todayRating)} size={14} />
+                  <span>{todayRating.toFixed(1)} / 5 · {todayMeals.length} {todayMeals.length === 1 ? 'comida' : 'comidas'}</span>
+                </div>
               </div>
               <div className="fl-today-macros">
                 <MacroBar t={todayTot} />
                 <MacroReadout t={todayTot} />
               </div>
             </div>
+            <p className="fl-verdict"><Flame size={13} />{verdict}</p>
           </>
         ) : (
           <p className="fl-today-empty">Aún no has registrado nada hoy. Mándame la foto de tu próxima comida 📸</p>
