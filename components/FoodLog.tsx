@@ -189,6 +189,32 @@ function Fact({ label, value, unit, ri, accent, sub }: {
   )
 }
 
+// Imagen genérica de respaldo si la ilustración del plato falla al cargar.
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=640&q=70'
+
+// SIEMPRE una imagen: foto real del usuario (Supabase Storage), o una ilustrativa del plato.
+function mealImage(m: Meal): { src: string; stock: boolean } {
+  if (m.photo_url && /supabase\.(co|in)/.test(m.photo_url)) return { src: m.photo_url, stock: false }
+  if (m.photo_url) return { src: m.photo_url, stock: true }   // p.ej. Unsplash que puso el bot
+  const kw = m.description.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')          // sin acentos
+    .replace(/\b(con|de|del|la|el|los|las|y|a|al|en|un|una|unos|unas|sin|estilo|caser[oa]s?)\b/g, ' ')
+    .replace(/[^a-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 2).join(',')
+  return { src: `https://loremflickr.com/640/480/${encodeURIComponent(kw || 'food')},food`, stock: true }
+}
+
+// Renderiza la imagen de una comida (+ badge "ilustración" si no es foto real del usuario).
+function MealPhoto({ m, lazy }: { m: Meal; lazy?: boolean }) {
+  const img = mealImage(m)
+  return (
+    <>
+      <img src={img.src} alt={m.description} loading={lazy ? 'lazy' : undefined}
+        onError={e => { if (e.currentTarget.src !== FALLBACK_IMG) e.currentTarget.src = FALLBACK_IMG }} />
+      {img.stock && <span className="fl-stock">ilustración</span>}
+    </>
+  )
+}
+
 function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -217,10 +243,7 @@ function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
         <button className="md-close" onClick={onClose} aria-label="Cerrar"><X size={18} strokeWidth={2.4} /></button>
 
         <div className="md-hero">
-          {m.photo_url
-            ? <img src={m.photo_url} alt={m.description} />
-            : <div className="fl-noimg"><Camera size={34} /></div>}
-          {m.photo_url?.includes('unsplash') && <span className="fl-stock">ilustración</span>}
+          <MealPhoto m={m} />
           <div className="md-hero-grad" />
           <div className="md-hero-info">
             <div className="md-time"><Clock size={12} />{fmtTime(m.meal_time)} · {formatLogDateFull(m.meal_date)}</div>
@@ -467,14 +490,11 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
                     viewport={{ once: true, margin: '-40px' }}
                     transition={{ duration: 0.5, delay: Math.min(mi * 0.05, 0.3), ease: EASE }}>
                     <div className="fl-photo">
-                      {m.photo_url
-                        ? <img src={m.photo_url} alt={m.description} loading="lazy" />
-                        : <div className="fl-noimg"><Camera size={26} /></div>}
+                      <MealPhoto m={m} lazy />
                       {m.rating != null && (
                         <span className={`fl-rate r${m.rating}`}><Stars value={m.rating} size={11} /></span>
                       )}
                       {m.kcal != null && <span className="fl-kcalbadge"><Flame size={11} />{m.kcal}</span>}
-                      {m.photo_url?.includes('unsplash') && <span className="fl-stock">ilustración</span>}
                     </div>
                     <div className="fl-body">
                       <div className="fl-time"><Clock size={11} />{fmtTime(m.meal_time)}</div>
