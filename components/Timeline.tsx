@@ -53,7 +53,7 @@ export default function Timeline({ logs, type }: Props) {
             key={log.id ?? log.log_date}
             className="tl-item"
             initial={{ opacity: 0, x: -18 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.45, delay: Math.min(i * 0.04, 0.4), ease: [0.16, 1, 0.3, 1] }}
           >

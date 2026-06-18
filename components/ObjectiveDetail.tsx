@@ -101,7 +101,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
 
       {/* Chart */}
       <motion.section className="dt-panel"
-        initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, ease: EASE }}>
         <div className="dt-panel-head">
           <span className="dt-panel-title"><TrendingUp size={15} /> Evolución</span>
@@ -125,7 +125,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
       <div className="dt-log">
         {items.map((p, i) => (
           <motion.div key={p.date} className={`dt-row${p.completed ? ' done' : ''}`}
-            initial={{ opacity: 0, x: -14 }} whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-30px' }}
             transition={{ duration: 0.4, delay: Math.min(i * 0.025, 0.4), ease: EASE }}>
             <div className="dt-row-date">

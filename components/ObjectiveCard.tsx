@@ -33,7 +33,7 @@ export default function ObjectiveCard({ type, logs, index }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 26 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.55, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
     >
@@ -70,7 +70,7 @@ export default function ObjectiveCard({ type, logs, index }: Props) {
           <motion.div
             className="bar-fill"
             initial={{ width: 0 }}
-            whileInView={{ width: `${consist}%` }}
+            animate={{ width: `${consist}%` }}
             viewport={{ once: true }}
             transition={{ duration: 1.2, delay: 0.3 + index * 0.1, ease: [0.16, 1, 0.3, 1] }}
           />
