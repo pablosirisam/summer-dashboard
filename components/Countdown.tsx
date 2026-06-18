@@ -1,39 +1,88 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { differenceInDays } from 'date-fns'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
 
-const SUMMER_START = new Date(2026, 5, 18)
-const SUMMER_END   = new Date(2026, 8, 1)
-const TOTAL        = 75
+interface Props {
+  remaining: number
+  total: number
+  elapsed: number
+  progress: number
+}
 
-export default function Countdown() {
-  const [state, setState] = useState<{ remaining: number; elapsed: number; pct: number } | null>(null)
-
+function useCountUp(target: number, run: boolean, ms = 1400) {
+  const [val, setVal] = useState(0)
   useEffect(() => {
-    const compute = () => {
-      const now = new Date()
-      const remaining = Math.max(0, differenceInDays(SUMMER_END, now))
-      const elapsed   = Math.min(TOTAL, Math.max(1, differenceInDays(now, SUMMER_START) + 1))
-      setState({ remaining, elapsed, pct: (elapsed / TOTAL) * 100 })
+    if (!run) return
+    let raf = 0
+    let startTs: number | null = null
+    const tick = (ts: number) => {
+      if (startTs === null) startTs = ts
+      const p = Math.min(1, (ts - startTs) / ms)
+      // easeOutExpo
+      const eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p)
+      setVal(Math.round(eased * target))
+      if (p < 1) raf = requestAnimationFrame(tick)
     }
-    compute()
-    const t = setInterval(compute, 60_000)
-    return () => clearInterval(t)
-  }, [])
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, run, ms])
+  return val
+}
 
-  if (!state) return null
+export default function Countdown({ remaining, total, elapsed, progress }: Props) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  const num = useCountUp(remaining, true)
+  const pct = useCountUp(Math.round(progress), true, 1600)
 
   return (
-    <div className="countdown">
-      <div className="countdown-top">
-        <span className="countdown-num">{state.remaining}</span>
-        <span className="countdown-label">días restantes</span>
+    <section className="hero" ref={ref}>
+      <div className="hero-beam" />
+      <p className="hero-eyebrow">VERANO 2026 · <b>cuenta atrás hasta la uni</b></p>
+
+      <div className="count-wrap">
+        <motion.div
+          className="count-num"
+          initial={{ opacity: 0, scale: 0.92, y: 14 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {num}
+        </motion.div>
+        <motion.p
+          className="count-label"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          días de verano <b>antes de septiembre</b>
+        </motion.p>
       </div>
-      <div className="countdown-sub">Día {state.elapsed} de {TOTAL} · {state.pct.toFixed(1)}%</div>
-      <div className="progress-bar">
-        <div className="progress-fill" style={{ width: `${state.pct}%` }} />
+
+      <div className="hero-meta">
+        <span><b>{elapsed}</b> vividos</span>
+        <span className="dot" />
+        <span><b>{remaining}</b> por delante</span>
+        <span className="dot" />
+        <span><b>{total}</b> días totales</span>
       </div>
-    </div>
+
+      <div className="hero-progress">
+        <div className="hp-track">
+          <motion.div
+            className="hp-fill"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+          />
+        </div>
+        <div className="hp-labels">
+          <span>18 JUN</span>
+          <span>{pct}% transcurrido</span>
+          <span>1 SEP</span>
+        </div>
+      </div>
+    </section>
   )
 }

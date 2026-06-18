@@ -1,68 +1,74 @@
-import { format } from 'date-fns'
+import { Sparkles, Target, CalendarRange, Activity } from 'lucide-react'
 import { getAllLogs } from '@/lib/supabase'
+import {
+  getDaysRemaining, getDaysElapsed, getSummerProgress,
+  TOTAL_DAYS, spainToday,
+} from '@/lib/utils'
+import Countdown from '@/components/Countdown'
 import ObjectiveCard from '@/components/ObjectiveCard'
 import HeatmapGrid from '@/components/HeatmapGrid'
-import TodayPanel from '@/components/TodayPanel'
-import RecentFeed from '@/components/RecentFeed'
-import Countdown from '@/components/Countdown'
+import Timeline from '@/components/Timeline'
 
 export const revalidate = 0
+
+const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+const WDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 
 export default async function Home() {
   const logs = await getAllLogs()
 
-  // Use Spain time (CEST = UTC+2) so midnight in Madrid doesn't show the wrong day
-  const utcNow   = new Date()
-  const spainNow = new Date(utcNow.getTime() + 2 * 60 * 60 * 1000)
-  const today    = format(spainNow, 'yyyy-MM-dd')
-  const todayLog = logs.find(l => l.log_date === today) ?? null
+  const today = spainToday()
+  const [y, m, d] = today.split('-').map(Number)
+  const wd = WDAYS[new Date(today + 'T00:00:00').getDay()]
+  const dateLabel = `${wd} ${d} ${MONTHS[m - 1]} ${y}`
 
-  const days = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB']
-  const dateLabel = `${days[spainNow.getDay()]} ${format(spainNow, 'd MMM yyyy').toUpperCase()}`
+  const remaining = getDaysRemaining()
+  const elapsed = getDaysElapsed()
+  const progress = getSummerProgress()
 
   return (
-    <main className="page">
+    <>
+      <div className="aurora"><div className="aurora-blob" /></div>
+      <div className="grid-overlay" />
 
-      {/* Header */}
-      <header className="header">
-        <div className="header-left">
-          <h1>SIRI / VERANO 2026</h1>
-          <p>IA · Alimentación · Deporte</p>
+      <main className="page">
+        <div className="topbar">
+          <div className="brand">
+            <div className="brand-mark"><Sparkles size={20} strokeWidth={2.2} /></div>
+            <div>
+              <div className="brand-name">Siri · Verano</div>
+              <div className="brand-sub">IA · Alimentación · Deporte</div>
+            </div>
+          </div>
+          <div className="topdate"><span className="live-dot" />{dateLabel}</div>
         </div>
-        <div className="header-right">
-          <div className="header-date">{dateLabel}</div>
-          <Countdown />
+
+        <Countdown remaining={remaining} total={TOTAL_DAYS} elapsed={elapsed} progress={progress} />
+
+        <div className="sec-head">
+          <span className="sec-title"><span className="ic"><Target size={15} /></span>Objetivos del verano</span>
+          <span className="sec-line" />
         </div>
-      </header>
+        <div className="cards">
+          <ObjectiveCard type="ia" logs={logs} index={0} />
+          <ObjectiveCard type="food" logs={logs} index={1} />
+          <ObjectiveCard type="sport" logs={logs} index={2} />
+        </div>
 
-      {/* Objective Cards */}
-      <div className="cards-grid">
-        <ObjectiveCard type="ia"    logs={logs} />
-        <ObjectiveCard type="food"  logs={logs} />
-        <ObjectiveCard type="sport" logs={logs} />
-      </div>
+        <div className="sec-head">
+          <span className="sec-title"><span className="ic"><CalendarRange size={15} /></span>Summer Map</span>
+          <span className="sec-line" />
+        </div>
+        <HeatmapGrid logs={logs} />
 
-      {/* Today */}
-      <div className="section">
-        <span className="section-title">Hoy</span>
-        <div className="section-line" />
-      </div>
-      <TodayPanel log={todayLog} today={today} />
+        <div className="sec-head">
+          <span className="sec-title"><span className="ic"><Activity size={15} /></span>Registro diario</span>
+          <span className="sec-line" />
+        </div>
+        <Timeline logs={logs} />
 
-      {/* Heatmap */}
-      <div className="section">
-        <span className="section-title">Summer Map</span>
-        <div className="section-line" />
-      </div>
-      <HeatmapGrid logs={logs} />
-
-      {/* Recent */}
-      <div className="section">
-        <span className="section-title">Historial</span>
-        <div className="section-line" />
-      </div>
-      <RecentFeed logs={logs} />
-
-    </main>
+        <div className="footer">SIRI · VERANO 2026 — 18 JUN → 1 SEP · datos en vivo desde Supabase</div>
+      </main>
+    </>
   )
 }
