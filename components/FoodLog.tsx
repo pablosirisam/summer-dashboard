@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import type { Meal } from '@/types'
 import { formatLogDateFull, weekdayShort } from '@/lib/utils'
+import { targets, PROFILE, bmi, PHASE_LABEL } from '@/lib/profile'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
@@ -132,8 +133,18 @@ const NOVA_DESC: Record<number, string> = {
   1: 'Sin procesar o mínimamente procesado', 2: 'Ingrediente culinario procesado',
   3: 'Alimento procesado', 4: 'Ultraprocesado — como capricho, no como hábito',
 }
-// Ingesta diaria de referencia (adulto medio, UE)
-const RI = { kcal: 2000, protein: 50, carbs: 260, sugar: 90, fat: 70, sat: 20, fiber: 25, salt: 6 }
+function GoalBar({ label, value, target, unit }: { label: string; value: number; target: number; unit: string }) {
+  const pct = Math.round((value / target) * 100)
+  return (
+    <div className="fl-goal">
+      <div className="fl-goal-top">
+        <span className="fl-goal-k">{label}</span>
+        <span className="fl-goal-v"><b>{Math.round(value)}</b> / {target} {unit} <i>{pct}%</i></span>
+      </div>
+      <div className="fl-goal-bar"><span style={{ width: `${Math.min(100, pct)}%` }} /></div>
+    </div>
+  )
+}
 
 function MacroDonut({ p, c, f }: { p: number; c: number; f: number }) {
   const pc = p * 4, cc = c * 4, fc = f * 9
@@ -187,6 +198,7 @@ function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
   }, [onClose])
 
+  const T = targets()
   const g = (m.nutri_score ?? '').toLowerCase()
   const p = m.protein_g ?? 0, c = m.carbs_g ?? 0, f = m.fat_g ?? 0
   const etot = p * 4 + c * 4 + f * 9 || 1
@@ -259,16 +271,16 @@ function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
           )}
 
           <div className="md-block">
-            <div className="md-block-h">Información nutricional <i>· % de la ingesta diaria de referencia</i></div>
+            <div className="md-block-h">Información nutricional <i>· % de tu objetivo diario ({PROFILE.weightKg} kg · {PHASE_LABEL[PROFILE.phase].toLowerCase()})</i></div>
             <div className="md-facts">
-              <Fact label="Energía" value={m.kcal} unit=" kcal" ri={RI.kcal} accent="var(--food-2)" />
-              <Fact label="Proteínas" value={m.protein_g} unit="g" ri={RI.protein} accent="#34e6a6" />
-              <Fact label="Hidratos de carbono" value={m.carbs_g} unit="g" ri={RI.carbs} accent="#818cf8" />
-              <Fact label="de los cuales azúcares" value={m.sugar_g} unit="g" ri={RI.sugar} accent="#f0a8d0" sub />
-              <Fact label="Grasas" value={m.fat_g} unit="g" ri={RI.fat} accent="#fbbf24" />
-              <Fact label="de las cuales saturadas" value={m.sat_fat_g} unit="g" ri={RI.sat} accent="#fb923c" sub />
-              <Fact label="Fibra" value={m.fiber_g} unit="g" ri={RI.fiber} accent="#34e6a6" />
-              <Fact label="Sal" value={m.salt_g} unit="g" ri={RI.salt} accent="#fbbf24" />
+              <Fact label="Energía" value={m.kcal} unit=" kcal" ri={T.kcal} accent="var(--food-2)" />
+              <Fact label="Proteínas" value={m.protein_g} unit="g" ri={T.protein.value} accent="#34e6a6" />
+              <Fact label="Hidratos de carbono" value={m.carbs_g} unit="g" ri={T.carbs.value} accent="#818cf8" />
+              <Fact label="de los cuales azúcares" value={m.sugar_g} unit="g" ri={T.sugar.value} accent="#f0a8d0" sub />
+              <Fact label="Grasas" value={m.fat_g} unit="g" ri={T.fat.value} accent="#fbbf24" />
+              <Fact label="de las cuales saturadas" value={m.sat_fat_g} unit="g" ri={T.satFat.value} accent="#fb923c" sub />
+              <Fact label="Fibra" value={m.fiber_g} unit="g" ri={T.fiber.value} accent="#34e6a6" />
+              <Fact label="Sal" value={m.salt_g} unit="g" ri={T.salt.value} accent="#fbbf24" />
             </div>
           </div>
 
@@ -286,6 +298,7 @@ function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
 
 export default function FoodLog({ meals, today }: { meals: Meal[]; today: string }) {
   const [selected, setSelected] = useState<Meal | null>(null)
+  const T = targets()
 
   // group by date, preserving the desc order coming from the query
   const groups: { date: string; meals: Meal[] }[] = []
@@ -339,8 +352,18 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
         </div>
         <div className="dt-headline">
           <span className="dt-big">{todayTot.kcal || 0}</span>
-          <span className="dt-big-u">kcal hoy</span>
+          <span className="dt-big-u">/ {T.kcal} kcal hoy</span>
         </div>
+      </motion.div>
+
+      {/* Perfil + metas */}
+      <motion.div className="fl-profile"
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05, ease: EASE }}>
+        <div className="flp-item"><span className="flp-k">Fase</span><span className="flp-v">{PHASE_LABEL[PROFILE.phase]}</span></div>
+        <div className="flp-item"><span className="flp-k">Meta diaria</span><span className="flp-v">{T.kcal} kcal · {T.protein.value}g prot</span></div>
+        <div className="flp-item"><span className="flp-k">Peso</span><span className="flp-v">{PROFILE.weightKg} → {PROFILE.goalWeightKg} kg</span></div>
+        <div className="flp-item"><span className="flp-k">IMC</span><span className="flp-v">{bmi()}</span></div>
       </motion.div>
 
       {/* Today panel */}
@@ -366,6 +389,10 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
                 <MacroBar t={todayTot} />
                 <MacroReadout t={todayTot} />
               </div>
+            </div>
+            <div className="fl-goals">
+              <GoalBar label="Calorías" value={todayTot.kcal} target={T.kcal} unit="kcal" />
+              <GoalBar label="Proteína" value={todayTot.p} target={T.protein.value} unit="g" />
             </div>
             <p className="fl-verdict"><Flame size={13} />{verdict}</p>
           </>
