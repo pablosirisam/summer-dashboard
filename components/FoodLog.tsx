@@ -220,6 +220,7 @@ function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
           {m.photo_url
             ? <img src={m.photo_url} alt={m.description} />
             : <div className="fl-noimg"><Camera size={34} /></div>}
+          {m.photo_url?.includes('unsplash') && <span className="fl-stock">ilustración</span>}
           <div className="md-hero-grad" />
           <div className="md-hero-info">
             <div className="md-time"><Clock size={12} />{fmtTime(m.meal_time)} · {formatLogDateFull(m.meal_date)}</div>
@@ -317,12 +318,21 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
   let cursor = daysSet.has(today) ? today : addDays(today, -1)
   while (daysSet.has(cursor)) { streak++; cursor = addDays(cursor, -1) }
 
-  const rated = meals.filter(m => m.rating != null)
-  const avgRating = rated.length ? rated.reduce((s, m) => s + (m.rating ?? 0), 0) / rated.length : 0
+  // Nota de salud PONDERADA POR CANTIDAD: kcal como proxy de "cuánto comiste".
+  // Σ(rating×kcal) / Σ(kcal) → 1kg de chuches pesa mucho más que 1 fruta.
+  // Comida sin kcal → peso por defecto 400 (ración media) para no descartarla.
+  const wRating = (ms: Meal[]) => {
+    const rated = ms.filter(m => m.rating != null)
+    if (!rated.length) return 0
+    const w = (m: Meal) => (m.kcal != null && m.kcal > 0 ? m.kcal : 400)
+    const num = rated.reduce((s, m) => s + (m.rating ?? 0) * w(m), 0)
+    const den = rated.reduce((s, m) => s + w(m), 0)
+    return den ? num / den : 0
+  }
+  const avgRating = wRating(meals)
   const avgKcal = groups.length ? Math.round(sum(meals).kcal / groups.length) : 0
 
-  const todayRated = todayMeals.filter(m => m.rating != null)
-  const todayRating = todayRated.length ? todayRated.reduce((s, m) => s + (m.rating ?? 0), 0) / todayRated.length : 0
+  const todayRating = wRating(todayMeals)
   const verdict =
     todayRating >= 4.5 ? 'Día impecable. Así se construye el físico.'
     : todayRating >= 3.5 ? 'Buen día en general. Mantén el nivel.'
@@ -332,7 +342,7 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
   const stats = [
     { icon: Flame, v: `${streak}`, k: 'racha de días', sub: streak > 0 ? 'registrando sin fallar' : 'empieza hoy' },
     { icon: Camera, v: `${meals.length}`, k: 'comidas en foto', sub: `${groups.length} días` },
-    { icon: Star, v: avgRating ? avgRating.toFixed(1) : '—', k: 'media de salud', sub: 'valoración del coach' },
+    { icon: Star, v: avgRating ? avgRating.toFixed(1) : '—', k: 'media de salud', sub: 'ponderada por cuánto comes' },
     { icon: TrendingUp, v: avgKcal ? `${avgKcal}` : '—', k: 'kcal media / día', sub: 'según lo fotografiado' },
   ]
 
@@ -464,6 +474,7 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
                         <span className={`fl-rate r${m.rating}`}><Stars value={m.rating} size={11} /></span>
                       )}
                       {m.kcal != null && <span className="fl-kcalbadge"><Flame size={11} />{m.kcal}</span>}
+                      {m.photo_url?.includes('unsplash') && <span className="fl-stock">ilustración</span>}
                     </div>
                     <div className="fl-body">
                       <div className="fl-time"><Clock size={11} />{fmtTime(m.meal_time)}</div>

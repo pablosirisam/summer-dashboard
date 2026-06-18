@@ -569,6 +569,7 @@ b { font-weight: 600; color: var(--ink); }
 .fl-rate { position: absolute; left: 10px; bottom: 10px; padding: 5px 8px; border-radius: 99px; background: rgba(6,7,16,0.72); backdrop-filter: blur(6px); border: 1px solid var(--line-2); }
 .fl-kcalbadge { position: absolute; right: 10px; top: 10px; display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 11px; font-weight: 600; color: #fff; padding: 4px 8px; border-radius: 99px; background: rgba(6,7,16,0.72); backdrop-filter: blur(6px); border: 1px solid var(--line-2); }
 .fl-kcalbadge svg { color: var(--food-2); }
+.fl-stock { position: absolute; left: 10px; top: 10px; z-index: 2; font-size: 10px; font-weight: 600; letter-spacing: 0.02em; color: rgba(255,255,255,0.82); padding: 4px 8px; border-radius: 99px; background: rgba(6,7,16,0.72); backdrop-filter: blur(6px); border: 1px solid var(--line-2); text-transform: lowercase; pointer-events: none; }
 .fl-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
 .fl-time { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-3); }
 .fl-desc { font-size: 14.5px; font-weight: 600; color: var(--ink); line-height: 1.3; }
