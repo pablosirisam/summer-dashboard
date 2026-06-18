@@ -2,27 +2,16 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { LayoutGrid, Brain, Salad, Dumbbell, type LucideIcon } from 'lucide-react'
-import type { DailyLog, ObjectiveType } from '@/types'
+import type { DailyLog } from '@/types'
 import {
   summerDates, spainToday, completedCountForLog,
-  getBestStreak, getCompletionCount, getStreak, getConsistency,
+  getBestStreak, getCompletionCount,
 } from '@/lib/utils'
-import { OBJECTIVES } from '@/lib/objectives'
 
-interface Props { logs: DailyLog[]; type?: ObjectiveType; interactive?: boolean }
+interface Props { logs: DailyLog[] }
 
 const WD = ['Lun', '', 'Mié', '', 'Vie', '', 'Dom']
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-
-type FilterKey = ObjectiveType | 'all'
-interface FilterOpt { key: FilterKey; label: string; icon: LucideIcon; accent: string; glow: string }
-const FILTERS: FilterOpt[] = [
-  { key: 'all',   label: 'Todos',   icon: LayoutGrid, accent: '#a89e8c', glow: '168,158,140' },
-  { key: 'ia',    label: 'IA',      icon: Brain,      accent: '#f0c26a', glow: '217,164,65' },
-  { key: 'food',  label: 'Comida',  icon: Salad,      accent: '#9dc587', glow: '127,169,107' },
-  { key: 'sport', label: 'Deporte', icon: Dumbbell,   accent: '#e68463', glow: '210,98,74' },
-]
 
 interface Cell {
   date: string | null
@@ -31,14 +20,7 @@ interface Cell {
   n: number
 }
 
-export default function HeatmapGrid({ logs, type, interactive }: Props) {
-  const [active, setActive] = useState<FilterKey>('all')
-  // `view` is the objective currently shown: fixed by `type` on detail pages,
-  // or driven by the interactive filter chips on the homepage.
-  const view: ObjectiveType | null = interactive
-    ? (active === 'all' ? null : active)
-    : (type ?? null)
-  const cfg = view ? OBJECTIVES[view] : null
+export default function HeatmapGrid({ logs }: Props) {
   const map = new Map(logs.map(l => [l.log_date, l]))
   const today = spainToday()
   const dates = summerDates()
@@ -49,23 +31,12 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
   for (let i = 0; i < firstWeekday; i++) flat.push({ date: null, cls: 'void', n: 0 })
   for (const date of dates) {
     const log = map.get(date)
+    const n = log ? completedCountForLog(log) : 0
     let cls = ''
-    let n = 0
-    if (cfg) {
-      // single-objective: binary completed / not
-      const done = log ? Boolean(log[cfg.field]) : false
-      n = done ? 1 : 0
-      if (log) cls = done ? 'on' : 'off'
-      else if (date < today) cls = 'empty'
-      else if (date === today) cls = 'empty today'
-      else cls = 'future'
-    } else {
-      n = log ? completedCountForLog(log) : 0
-      if (log) cls = n >= 3 ? 'l3' : n === 2 ? 'l2' : n === 1 ? 'l1' : 'empty'
-      else if (date < today) cls = 'empty'
-      else if (date === today) cls = 'empty today'
-      else cls = 'future'
-    }
+    if (log) cls = n >= 3 ? 'l3' : n === 2 ? 'l2' : n === 1 ? 'l1' : 'empty'
+    else if (date < today) cls = 'empty'
+    else if (date === today) cls = 'empty today'
+    else cls = 'future'
     if (date === today && cls.indexOf('today') === -1) cls += ' today'
     flat.push({ date, log, cls, n })
   }
@@ -86,76 +57,23 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
 
   const [hover, setHover] = useState<{ c: Cell; x: number; y: number } | null>(null)
 
-  // ── Side stats ──────────────────────────────────────────────
+  // Side stats
   const logged = logs.length
-  let sideStats: { v: string; u?: string; k: string; cls?: string }[]
-  if (cfg) {
-    const done = getCompletionCount(logs, cfg.field)
-    const streak = getStreak(logs, cfg.field)
-    const best = getBestStreak(logs, cfg.field)
-    const consist = Math.round(getConsistency(logs, cfg.field))
-    sideStats = [
-      { v: String(done), u: ' / 75', k: 'días cumplidos', cls: 'accent' },
-      { v: String(streak), k: 'racha actual', cls: 'accent' },
-      { v: String(best), k: 'mejor racha' },
-      { v: String(consist), u: '%', k: 'consistencia' },
-    ]
-  } else {
-    const perfect = logs.filter(l => completedCountForLog(l) === 3).length
-    const bestStreak = Math.max(
-      getBestStreak(logs, 'ia_completed'),
-      getBestStreak(logs, 'food_completed'),
-      getBestStreak(logs, 'sport_completed'),
-    )
-    const totalCompletions =
-      getCompletionCount(logs, 'ia_completed') +
-      getCompletionCount(logs, 'food_completed') +
-      getCompletionCount(logs, 'sport_completed')
-    const consistAvg = logged > 0 ? Math.round((totalCompletions / (logged * 3)) * 100) : 0
-    sideStats = [
-      { v: String(logged), u: ' / 75', k: 'días registrados', cls: 'indigo' },
-      { v: String(perfect), k: 'días perfectos (3/3)', cls: 'green' },
-      { v: String(bestStreak), k: 'mejor racha', cls: 'amber' },
-      { v: String(consistAvg), u: '%', k: 'consistencia media' },
-    ]
-  }
-
-  const accentVars = cfg
-    ? ({ ['--heat-accent' as string]: cfg.accent2, ['--heat-glow' as string]: cfg.glow } as React.CSSProperties)
-    : undefined
+  const perfect = logs.filter(l => completedCountForLog(l) === 3).length
+  const bestStreak = Math.max(
+    getBestStreak(logs, 'ia_completed'),
+    getBestStreak(logs, 'food_completed'),
+    getBestStreak(logs, 'sport_completed'),
+  )
+  const totalCompletions =
+    getCompletionCount(logs, 'ia_completed') +
+    getCompletionCount(logs, 'food_completed') +
+    getCompletionCount(logs, 'sport_completed')
+  const consistAvg = logged > 0 ? Math.round((totalCompletions / (logged * 3)) * 100) : 0
 
   return (
-    <div className="heat-panel" style={accentVars}>
+    <div className="heat-panel">
       <div className="heat-main">
-        {interactive && (
-          <div className="heat-filters" role="tablist" aria-label="Filtrar por objetivo">
-            {FILTERS.map(f => {
-              const FIcon = f.icon
-              const on = active === f.key
-              return (
-                <button
-                  key={f.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  className={`heat-chip${on ? ' on' : ''}`}
-                  style={{ ['--chip' as string]: f.accent, ['--chip-glow' as string]: f.glow }}
-                  onClick={() => setActive(f.key)}
-                >
-                  {on && (
-                    <motion.span
-                      layoutId="heat-chip-pill"
-                      className="heat-chip-pill"
-                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    />
-                  )}
-                  <FIcon size={14} strokeWidth={2.2} />
-                  <span>{f.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
         <div className="heat-months" style={{ gridTemplateColumns: `repeat(${cols.length}, minmax(0,1fr))` }}>
           {monthLabels.map((m, i) => (
             <span key={i} className="heat-month">{m}</span>
@@ -181,37 +99,22 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
           </div>
         </div>
         <div className="heat-legend">
-          {cfg ? (
-            <>
-              <span>Sin cumplir</span>
-              <div className="lg-cells">
-                <span className="lg cell off" />
-                <span className="lg cell on" />
-              </div>
-              <span>Cumplido · {cfg.label.toLowerCase()}</span>
-            </>
-          ) : (
-            <>
-              <span>Menos</span>
-              <div className="lg-cells">
-                <span className="lg cell empty" />
-                <span className="lg cell l1" />
-                <span className="lg cell l2" />
-                <span className="lg cell l3" />
-              </div>
-              <span>Más · color = objetivos cumplidos ese día</span>
-            </>
-          )}
+          <span>Menos</span>
+          <div className="lg-cells">
+            <span className="lg cell empty" />
+            <span className="lg cell l1" />
+            <span className="lg cell l2" />
+            <span className="lg cell l3" />
+          </div>
+          <span>Más · color = objetivos cumplidos ese día</span>
         </div>
       </div>
 
       <div className="heat-side">
-        {sideStats.map((s, i) => (
-          <div key={i} className="hs-stat">
-            <div className={`hs-v ${s.cls ?? ''}`}>{s.v}{s.u && <span className="u">{s.u}</span>}</div>
-            <div className="hs-k">{s.k}</div>
-          </div>
-        ))}
+        <div className="hs-stat"><div className="hs-v indigo">{logged}<span className="u"> / 75</span></div><div className="hs-k">días registrados</div></div>
+        <div className="hs-stat"><div className="hs-v green">{perfect}</div><div className="hs-k">días perfectos (3/3)</div></div>
+        <div className="hs-stat"><div className="hs-v amber">{bestStreak}</div><div className="hs-k">mejor racha</div></div>
+        <div className="hs-stat"><div className="hs-v">{consistAvg}<span className="u">%</span></div><div className="hs-k">consistencia media</div></div>
       </div>
 
       {hover && hover.c.date && (
@@ -224,24 +127,18 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
             boxShadow: '0 20px 50px -20px rgba(0,0,0,0.9)',
           }}
         >
-          <Tooltip cell={hover.c} type={view ?? undefined} />
+          <Tooltip cell={hover.c} />
         </div>
       )}
     </div>
   )
 }
 
-function Tooltip({ cell, type }: { cell: Cell; type?: ObjectiveType }) {
+function Tooltip({ cell }: { cell: Cell }) {
   const date = cell.date!
   const [, m, d] = date.split('-').map(Number)
   const wd = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][new Date(date + 'T00:00:00').getDay()]
   const log = cell.log
-  const lines = [
-    { key: 'ia' as const,    on: !!log?.ia_completed,    c: '#f0c26a', k: 'IA',      v: log?.ia_hours ? `${log.ia_hours}h` : '' },
-    { key: 'food' as const,  on: !!log?.food_completed,  c: '#9dc587', k: 'Comida',  v: log?.food_rating ? `${log.food_rating}★` : '' },
-    { key: 'sport' as const, on: !!log?.sport_completed, c: '#e68463', k: 'Deporte', v: log?.sport_minutes ? `${log.sport_minutes}min` : '' },
-  ].filter(l => !type || l.key === type)
-
   return (
     <div style={{ fontFamily: 'var(--mono)' }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: '#f4f5fb', marginBottom: log ? 7 : 0 }}>
@@ -253,7 +150,9 @@ function Tooltip({ cell, type }: { cell: Cell; type?: ObjectiveType }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 4, fontSize: 11.5 }}>
-          {lines.map(l => <Line key={l.k} on={l.on} c={l.c} k={l.k} v={l.v} />)}
+          <Line on={log.ia_completed}    c="#818cf8" k="IA"      v={log.ia_hours ? `${log.ia_hours}h` : ''} />
+          <Line on={log.food_completed}  c="#34e6a0" k="Comida"  v={log.food_rating ? `${log.food_rating}★` : ''} />
+          <Line on={log.sport_completed} c="#fbbf24" k="Deporte" v={log.sport_minutes ? `${log.sport_minutes}min` : ''} />
         </div>
       )}
     </div>
