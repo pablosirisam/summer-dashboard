@@ -1,8 +1,9 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Salad, Flame, Star, Camera, Clock, Utensils, TrendingUp,
+  Salad, Flame, Star, Camera, Clock, Utensils, TrendingUp, X,
 } from 'lucide-react'
 import type { Meal } from '@/types'
 import { formatLogDateFull, weekdayShort } from '@/lib/utils'
@@ -122,7 +123,170 @@ function NutriExtra({ m }: { m: Meal }) {
   )
 }
 
+// ── Meal detail modal — "nutrition label" pro view ────────────────
+const NS_DESC: Record<string, string> = {
+  a: 'Calidad nutricional muy alta', b: 'Buena calidad nutricional', c: 'Calidad media',
+  d: 'Calidad baja — a moderar', e: 'Calidad muy baja — ocasional',
+}
+const NOVA_DESC: Record<number, string> = {
+  1: 'Sin procesar o mínimamente procesado', 2: 'Ingrediente culinario procesado',
+  3: 'Alimento procesado', 4: 'Ultraprocesado — como capricho, no como hábito',
+}
+// Ingesta diaria de referencia (adulto medio, UE)
+const RI = { kcal: 2000, protein: 50, carbs: 260, sugar: 90, fat: 70, sat: 20, fiber: 25, salt: 6 }
+
+function MacroDonut({ p, c, f }: { p: number; c: number; f: number }) {
+  const pc = p * 4, cc = c * 4, fc = f * 9
+  const tot = pc + cc + fc || 1
+  const segs = [
+    { v: pc / tot, color: '#34e6a6' },
+    { v: cc / tot, color: '#818cf8' },
+    { v: fc / tot, color: '#fbbf24' },
+  ]
+  const R = 54, SW = 13, CIRC = 2 * Math.PI * R
+  let acc = 0
+  return (
+    <svg viewBox="0 0 140 140" className="md-donut" aria-hidden>
+      <circle cx="70" cy="70" r={R} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={SW} />
+      {segs.map((s, i) => {
+        const len = s.v * CIRC
+        const off = -acc
+        acc += len
+        return (
+          <circle key={i} cx="70" cy="70" r={R} fill="none" stroke={s.color} strokeWidth={SW}
+            strokeDasharray={`${len} ${CIRC - len}`} strokeDashoffset={off} transform="rotate(-90 70 70)" />
+        )
+      })}
+    </svg>
+  )
+}
+
+function Fact({ label, value, unit, ri, accent, sub }: {
+  label: string; value: number | null; unit: string; ri: number; accent: string; sub?: boolean
+}) {
+  if (value == null) return null
+  const pct = Math.round((value / ri) * 100)
+  const disp = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10
+  return (
+    <div className={`md-fact${sub ? ' sub' : ''}`}>
+      <div className="md-fact-top">
+        <span className="md-fact-k">{label}</span>
+        <span className="md-fact-v">{disp}{unit} <i>{pct}%</i></span>
+      </div>
+      <div className="md-fact-bar"><span style={{ width: `${Math.min(100, pct)}%`, background: accent }} /></div>
+    </div>
+  )
+}
+
+function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
+  }, [onClose])
+
+  const g = (m.nutri_score ?? '').toLowerCase()
+  const p = m.protein_g ?? 0, c = m.carbs_g ?? 0, f = m.fat_g ?? 0
+  const etot = p * 4 + c * 4 + f * 9 || 1
+  const legend = [
+    { k: 'Proteínas', g: p, pct: Math.round((p * 4 / etot) * 100), color: '#34e6a6' },
+    { k: 'Carbohidratos', g: c, pct: Math.round((c * 4 / etot) * 100), color: '#818cf8' },
+    { k: 'Grasas', g: f, pct: Math.round((f * 9 / etot) * 100), color: '#fbbf24' },
+  ]
+
+  return (
+    <motion.div className="md-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label={m.description}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+      <motion.div className="md-panel" onClick={e => e.stopPropagation()}
+        initial={{ opacity: 0, y: 30, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.98 }} transition={{ duration: 0.4, ease: EASE }}>
+        <button className="md-close" onClick={onClose} aria-label="Cerrar"><X size={18} strokeWidth={2.4} /></button>
+
+        <div className="md-hero">
+          {m.photo_url
+            ? <img src={m.photo_url} alt={m.description} />
+            : <div className="fl-noimg"><Camera size={34} /></div>}
+          <div className="md-hero-grad" />
+          <div className="md-hero-info">
+            <div className="md-time"><Clock size={12} />{fmtTime(m.meal_time)} · {formatLogDateFull(m.meal_date)}</div>
+            <h2 className="md-title">{m.description}</h2>
+            {m.rating != null && (
+              <div className="md-rating"><Stars value={m.rating} size={16} /><span>{m.rating} / 5</span></div>
+            )}
+          </div>
+        </div>
+
+        <div className="md-content">
+          {(NS_COLORS[g] || (m.nova_group != null && NOVA[m.nova_group])) && (
+            <div className="md-scores">
+              {NS_COLORS[g] && (
+                <div className="md-score-card">
+                  <NutriScore grade={m.nutri_score} />
+                  <span className="md-score-desc">{NS_DESC[g]}</span>
+                </div>
+              )}
+              {m.nova_group != null && NOVA[m.nova_group] && (
+                <div className="md-score-card">
+                  <NovaBadge group={m.nova_group} />
+                  <span className="md-score-desc">{NOVA_DESC[m.nova_group]}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(m.kcal != null || p || c || f) && (
+            <div className="md-block">
+              <div className="md-block-h">Reparto energético</div>
+              <div className="md-macro-wrap">
+                <div className="md-donut-wrap">
+                  <MacroDonut p={p} c={c} f={f} />
+                  <div className="md-donut-c"><b>{m.kcal ?? 0}</b><span>KCAL</span></div>
+                </div>
+                <div className="md-macro-legend">
+                  {legend.map(ml => (
+                    <div key={ml.k} className="md-ml">
+                      <span className="md-ml-dot" style={{ background: ml.color }} />
+                      <span className="md-ml-k">{ml.k}</span>
+                      <span className="md-ml-g">{r0(ml.g)}g</span>
+                      <span className="md-ml-pct">{ml.pct}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="md-block">
+            <div className="md-block-h">Información nutricional <i>· % de la ingesta diaria de referencia</i></div>
+            <div className="md-facts">
+              <Fact label="Energía" value={m.kcal} unit=" kcal" ri={RI.kcal} accent="var(--food-2)" />
+              <Fact label="Proteínas" value={m.protein_g} unit="g" ri={RI.protein} accent="#34e6a6" />
+              <Fact label="Hidratos de carbono" value={m.carbs_g} unit="g" ri={RI.carbs} accent="#818cf8" />
+              <Fact label="de los cuales azúcares" value={m.sugar_g} unit="g" ri={RI.sugar} accent="#f0a8d0" sub />
+              <Fact label="Grasas" value={m.fat_g} unit="g" ri={RI.fat} accent="#fbbf24" />
+              <Fact label="de las cuales saturadas" value={m.sat_fat_g} unit="g" ri={RI.sat} accent="#fb923c" sub />
+              <Fact label="Fibra" value={m.fiber_g} unit="g" ri={RI.fiber} accent="#34e6a6" />
+              <Fact label="Sal" value={m.salt_g} unit="g" ri={RI.salt} accent="#fbbf24" />
+            </div>
+          </div>
+
+          {m.comment && (
+            <div className="md-verdict">
+              <div className="md-verdict-h"><Flame size={13} /> Veredicto del coach</div>
+              <p>{m.comment}</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export default function FoodLog({ meals, today }: { meals: Meal[]; today: string }) {
+  const [selected, setSelected] = useState<Meal | null>(null)
+
   // group by date, preserving the desc order coming from the query
   const groups: { date: string; meals: Meal[] }[] = []
   const idx = new Map<string, number>()
@@ -259,6 +423,9 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
               <div className="fl-grid">
                 {g.meals.map((m, mi) => (
                   <motion.article key={m.id} className="fl-card"
+                    onClick={() => setSelected(m)}
+                    role="button" tabIndex={0} aria-label={`Ver detalle de ${m.description}`}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(m) } }}
                     initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-40px' }}
                     transition={{ duration: 0.5, delay: Math.min(mi * 0.05, 0.3), ease: EASE }}>
@@ -297,6 +464,10 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
           )
         })}
       </div>
+
+      <AnimatePresence>
+        {selected && <MealDetail meal={selected} onClose={() => setSelected(null)} />}
+      </AnimatePresence>
     </main>
   )
 }
