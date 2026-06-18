@@ -1,13 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Brain, Salad, Dumbbell, Flame, Check, Minus, TrendingUp, Calendar, Award, CalendarRange, type LucideIcon } from 'lucide-react'
+import { Brain, Salad, Dumbbell, Flame, Check, Minus, TrendingUp, TrendingDown, Calendar, Award, CalendarRange, type LucideIcon } from 'lucide-react'
 import type { DailyLog } from '@/types'
 import EvolutionChart from './EvolutionChart'
 import HeatmapGrid from './HeatmapGrid'
 import {
   type ObjType, getSeries, getMetricTotal, getMetricAvg, getBestDay,
   getStreak, getBestStreak, getCompletionCount, getConsistency,
+  getActiveDays, getMetricTrend,
   completedField, formatLogDateFull, weekdayShort,
 } from '@/lib/utils'
 
@@ -30,6 +31,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
   const Icon = c.icon
   const field = completedField(type)
 
+  const isStreak = type === 'sport'
   const series = getSeries(logs, type)
   const done = getCompletionCount(logs, field)
   const streak = getStreak(logs, field)
@@ -37,6 +39,8 @@ export default function ObjectiveDetail({ type, logs }: Props) {
   const consist = Math.round(getConsistency(logs, field))
   const avg = getMetricAvg(logs, type)
   const bestDay = getBestDay(logs, type)
+  const activeDays = getActiveDays(logs, type)
+  const trend = getMetricTrend(logs, type)
 
   // Headline metric + stat formatting per objective
   let headline = '', headlineUnit = '', avgLabel = '', bestLabel = ''
@@ -54,6 +58,22 @@ export default function ObjectiveDetail({ type, logs }: Props) {
     avgLabel = `${avg} min / sesión`
     bestLabel = bestDay ? `${bestDay.value}min` : '—'
   }
+
+  const TrendIcon = trend?.dir === 'up' ? TrendingUp : trend?.dir === 'down' ? TrendingDown : Minus
+  // Deporte → constancia (binario). IA → evolución (seguimiento para mejorar).
+  const stats = isStreak
+    ? [
+        { icon: Check,      v: `${done}`,     k: 'días completados', sub: `de ${logs.length} registrados` },
+        { icon: Flame,      v: `${streak}`,   k: 'racha actual',     sub: streak === best && best > 0 ? '¡tu mejor racha!' : `máxima: ${best}` },
+        { icon: TrendingUp, v: `${consist}%`, k: 'constancia',       sub: avgLabel },
+        { icon: Award,      v: bestLabel,     k: 'mejor día',        sub: bestDay ? formatLogDateFull(bestDay.date) : '—' },
+      ]
+    : [
+        { icon: Calendar,   v: `${activeDays}`,   k: 'días activos',  sub: `de ${logs.length} registrados` },
+        { icon: TrendingUp, v: `${avg}${c.unit}`, k: 'media por día', sub: 'cuando te pones a ello' },
+        { icon: TrendIcon,  v: trend ? `${trend.pct > 0 ? '+' : ''}${trend.pct}%` : '—', k: 'tendencia', sub: trend ? 'últimos 7 días vs. previos' : 'aún sin datos' },
+        { icon: Award,      v: bestLabel,         k: 'mejor sesión',  sub: bestDay ? formatLogDateFull(bestDay.date) : '—' },
+      ]
 
   const items = [...series].reverse()
 
@@ -79,12 +99,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
 
       {/* Stat grid */}
       <div className="dt-stats">
-        {[
-          { icon: Check,      v: `${done}`,        k: 'días completados', sub: `de ${logs.length} registrados` },
-          { icon: Flame,      v: `${streak}`,      k: 'racha actual',     sub: streak === best && best > 0 ? '¡tu mejor racha!' : `máxima: ${best}` },
-          { icon: TrendingUp, v: `${consist}%`,    k: 'cumplimiento',     sub: avgLabel },
-          { icon: Award,      v: bestLabel,        k: 'mejor día',        sub: bestDay ? formatLogDateFull(bestDay.date) : '—' },
-        ].map((s, i) => {
+        {stats.map((s, i) => {
           const SIcon = s.icon
           return (
             <motion.div key={i} className="dt-stat"
