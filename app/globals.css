@@ -352,6 +352,9 @@ b { font-weight: 600; color: var(--ink); }
 .cell.l1 { background: rgba(16,217,139,0.42); }
 .cell.l2 { background: rgba(16,217,139,0.7); }
 .cell.l3 { background: var(--food); box-shadow: 0 0 9px rgba(var(--food-glow), 0.55); }
+.cell.i1 { background: rgba(var(--heat-glow, 16,217,139), 0.30); }
+.cell.i2 { background: rgba(var(--heat-glow, 16,217,139), 0.60); }
+.cell.i3 { background: rgba(var(--heat-glow, 16,217,139), 0.95); box-shadow: 0 0 9px rgba(var(--heat-glow, 16,217,139), 0.5); }
 .cell.off { background: rgba(255,255,255,0.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02); }
 .cell.on { background: var(--heat-accent, var(--food)); box-shadow: 0 0 8px rgba(var(--heat-glow, 16,217,139), 0.55); }
 .heat-legend { display: flex; align-items: center; gap: 9px; margin-top: 16px; font-family: var(--mono); font-size: 10px; color: var(--ink-3); }

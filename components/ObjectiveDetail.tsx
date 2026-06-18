@@ -127,7 +127,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
 
       {/* Filtered heatmap */}
       <div className="sec-head">
-        <span className="sec-title"><span className="ic"><CalendarRange size={15} /></span>Mapa de cumplimiento</span>
+        <span className="sec-title"><span className="ic"><CalendarRange size={15} /></span>{isStreak ? 'Mapa de constancia' : 'Mapa de intensidad'}</span>
         <span className="sec-line" />
       </div>
       <HeatmapGrid logs={logs} type={type} />

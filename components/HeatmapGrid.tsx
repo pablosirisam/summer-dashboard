@@ -7,6 +7,7 @@ import type { DailyLog, ObjectiveType } from '@/types'
 import {
   summerDates, spainToday, completedCountForLog,
   getBestStreak, getCompletionCount, getStreak, getConsistency,
+  getActiveDays, getMetricAvg, getMetricTotal, getBestDay,
 } from '@/lib/utils'
 import { OBJECTIVES } from '@/lib/objectives'
 
@@ -14,6 +15,16 @@ interface Props { logs: DailyLog[]; type?: ObjectiveType; interactive?: boolean 
 
 const WD = ['Lun', '', 'Mié', '', 'Vie', '', 'Dom']
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+const METRIC: Record<ObjectiveType, keyof DailyLog> = { ia: 'ia_hours', food: 'food_rating', sport: 'sport_minutes' }
+
+/** Intensity bucket (i1<i2<i3) for a 'progress' objective. Food uses the 1-5 rating; IA scales by max. */
+function intensityLevel(view: ObjectiveType, v: number, maxV: number): string {
+  if (v <= 0) return ''
+  if (view === 'food') return v >= 4 ? 'i3' : v >= 3 ? 'i2' : 'i1'
+  const r = v / maxV
+  return r > 0.66 ? 'i3' : r > 0.33 ? 'i2' : 'i1'
+}
 
 type FilterKey = ObjectiveType | 'all'
 interface FilterOpt { key: FilterKey; label: string; icon: LucideIcon; accent: string; glow: string }
@@ -39,6 +50,9 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
     ? (active === 'all' ? null : active)
     : (type ?? null)
   const cfg = view ? OBJECTIVES[view] : null
+  const mode = cfg?.mode ?? null
+  const metricKey: keyof DailyLog | null = view ? METRIC[view] : null
+  const maxV = metricKey ? Math.max(1, ...logs.map(l => Number(l[metricKey]) || 0)) : 1
   const map = new Map(logs.map(l => [l.log_date, l]))
   const today = spainToday()
   const dates = summerDates()
@@ -51,8 +65,16 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
     const log = map.get(date)
     let cls = ''
     let n = 0
-    if (cfg) {
-      // single-objective: binary completed / not
+    if (cfg && mode === 'progress') {
+      // progress objective (IA/comida): intensity by metric magnitude
+      const v = log ? Number(log[metricKey!]) || 0 : 0
+      n = v
+      if (log) cls = intensityLevel(view!, v, maxV) || 'off'
+      else if (date < today) cls = 'empty'
+      else if (date === today) cls = 'empty today'
+      else cls = 'future'
+    } else if (cfg) {
+      // streak objective (deporte): binary completed / not
       const done = log ? Boolean(log[cfg.field]) : false
       n = done ? 1 : 0
       if (log) cls = done ? 'on' : 'off'
@@ -89,7 +111,7 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
   // ── Side stats ──────────────────────────────────────────────
   const logged = logs.length
   let sideStats: { v: string; u?: string; k: string; cls?: string }[]
-  if (cfg) {
+  if (cfg && mode === 'streak') {
     const done = getCompletionCount(logs, cfg.field)
     const streak = getStreak(logs, cfg.field)
     const best = getBestStreak(logs, cfg.field)
@@ -99,6 +121,19 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
       { v: String(streak), k: 'racha actual', cls: 'accent' },
       { v: String(best), k: 'mejor racha' },
       { v: String(consist), u: '%', k: 'consistencia' },
+    ]
+  } else if (cfg) {
+    const activeDays = getActiveDays(logs, view!)
+    const avg = getMetricAvg(logs, view!)
+    const bestDay = getBestDay(logs, view!)
+    const unit = view === 'food' ? '★' : view === 'ia' ? 'h' : 'min'
+    sideStats = [
+      { v: String(activeDays), u: ' / 75', k: 'días activos', cls: 'accent' },
+      { v: String(avg), k: view === 'food' ? 'nota media' : `media ${unit}/día`, cls: 'accent' },
+      { v: bestDay ? String(bestDay.value) : '—', k: 'mejor día' },
+      view === 'food'
+        ? { v: String(logs.filter(l => (l.food_rating ?? 0) >= 4).length), k: 'días ≥4★' }
+        : { v: String(getMetricTotal(logs, view!)), k: 'horas totales' },
     ]
   } else {
     const perfect = logs.filter(l => completedCountForLog(l) === 3).length
@@ -181,7 +216,18 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
           </div>
         </div>
         <div className="heat-legend">
-          {cfg ? (
+          {!cfg ? (
+            <>
+              <span>Menos</span>
+              <div className="lg-cells">
+                <span className="lg cell empty" />
+                <span className="lg cell l1" />
+                <span className="lg cell l2" />
+                <span className="lg cell l3" />
+              </div>
+              <span>Más · color = objetivos cumplidos ese día</span>
+            </>
+          ) : mode === 'streak' ? (
             <>
               <span>Sin cumplir</span>
               <div className="lg-cells">
@@ -195,11 +241,11 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
               <span>Menos</span>
               <div className="lg-cells">
                 <span className="lg cell empty" />
-                <span className="lg cell l1" />
-                <span className="lg cell l2" />
-                <span className="lg cell l3" />
+                <span className="lg cell i1" />
+                <span className="lg cell i2" />
+                <span className="lg cell i3" />
               </div>
-              <span>Más · color = objetivos cumplidos ese día</span>
+              <span>Más · {view === 'food' ? 'mejor nota del día' : 'más horas'}</span>
             </>
           )}
         </div>
