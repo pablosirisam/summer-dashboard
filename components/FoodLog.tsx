@@ -192,15 +192,30 @@ function Fact({ label, value, unit, ri, accent, sub }: {
 // Imagen genérica de respaldo si la ilustración del plato falla al cargar.
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=640&q=70'
 
+// Traducción ES→EN de alimentos comunes para que la ilustración de respaldo acierte.
+const FOOD_ES_EN: Record<string, string> = {
+  aguacate: 'avocado', pollo: 'chicken', arroz: 'rice', huevo: 'egg', huevos: 'eggs',
+  pasta: 'pasta', ensalada: 'salad', pescado: 'fish', carne: 'meat', ternera: 'beef',
+  cerdo: 'pork', pavo: 'turkey', atun: 'tuna', salmon: 'salmon', gambas: 'shrimp',
+  champinones: 'mushrooms', champinon: 'mushroom', verdura: 'vegetables', verduras: 'vegetables',
+  fruta: 'fruit', platano: 'banana', manzana: 'apple', naranja: 'orange', tomate: 'tomato',
+  patata: 'potato', patatas: 'potatoes', pan: 'bread', queso: 'cheese', yogur: 'yogurt',
+  leche: 'milk', sopa: 'soup', tortilla: 'omelette', lentejas: 'lentils', garbanzos: 'chickpeas',
+  pizza: 'pizza', hamburguesa: 'burger', bocadillo: 'sandwich', cafe: 'coffee', avena: 'oatmeal',
+}
+
 // SIEMPRE una imagen: foto real del usuario (Supabase Storage), o una ilustrativa del plato.
 function mealImage(m: Meal): { src: string; stock: boolean } {
   if (m.photo_url && /supabase\.(co|in)/.test(m.photo_url)) return { src: m.photo_url, stock: false }
   if (m.photo_url) return { src: m.photo_url, stock: true }   // p.ej. Unsplash que puso el bot
-  const kw = m.description.toLowerCase()
+  const stop = new Set(['con','de','del','la','el','los','las','y','a','al','en','un','una','unos','unas','sin','foto','estilo','casero','casera','caseros','caseras','entero','entera','plato','racion','unidad'])
+  const words = m.description.toLowerCase()
     .normalize('NFD').replace(/[̀-ͯ]/g, '')          // sin acentos
-    .replace(/\b(con|de|del|la|el|los|las|y|a|al|en|un|una|unos|unas|sin|estilo|caser[oa]s?)\b/g, ' ')
-    .replace(/[^a-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 2).join(',')
-  return { src: `https://loremflickr.com/640/480/${encodeURIComponent(kw || 'food')},food`, stock: true }
+    .replace(/\([^)]*\)/g, ' ')                                // quita "(~1 unidad, sin foto)"
+    .replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean)
+  const first = words.find(w => w.length > 2 && !stop.has(w)) || 'food'
+  const kw = FOOD_ES_EN[first] || first                        // un solo término, en inglés si lo conozco
+  return { src: `https://loremflickr.com/640/480/${encodeURIComponent(kw)}`, stock: true }
 }
 
 // Renderiza la imagen de una comida (+ badge "ilustración" si no es foto real del usuario).
