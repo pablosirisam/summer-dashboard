@@ -70,6 +70,58 @@ function MacroReadout({ t }: { t: Totals }) {
   )
 }
 
+// ── Open Food Facts nutrition badges ──────────────────────────────
+const NS_COLORS: Record<string, string> = { a: '#038141', b: '#85bb2f', c: '#fecb02', d: '#ee8100', e: '#e63e11' }
+
+function NutriScore({ grade }: { grade: string | null }) {
+  const g = (grade ?? '').toLowerCase()
+  if (!NS_COLORS[g]) return null
+  return (
+    <div className="ns" title={`Nutri-Score ${g.toUpperCase()}`}>
+      <span className="ns-label">Nutri-Score</span>
+      <span className="ns-scale">
+        {['a', 'b', 'c', 'd', 'e'].map(l => (
+          <span key={l} className={`ns-l${l === g ? ' on' : ''}`} style={l === g ? { background: NS_COLORS[l] } : undefined}>
+            {l.toUpperCase()}
+          </span>
+        ))}
+      </span>
+    </div>
+  )
+}
+
+const NOVA: Record<number, { c: string; t: string }> = {
+  1: { c: '#10d98b', t: 'sin procesar' },
+  2: { c: '#9bcf3a', t: 'proc. culinario' },
+  3: { c: '#fb923c', t: 'procesado' },
+  4: { c: '#e63e11', t: 'ultraprocesado' },
+}
+
+function NovaBadge({ group }: { group: number | null }) {
+  if (!group || !NOVA[group]) return null
+  const n = NOVA[group]
+  return (
+    <span className="nova" style={{ ['--nv' as string]: n.c }} title={`NOVA ${group} · ${n.t}`}>
+      NOVA {group} · {n.t}
+    </span>
+  )
+}
+
+function NutriExtra({ m }: { m: Meal }) {
+  const items = [
+    m.fiber_g != null && { k: 'Fibra', v: `${r0(m.fiber_g)}g`, cls: 'fib' },
+    m.sugar_g != null && { k: 'Azúcar', v: `${r0(m.sugar_g)}g`, cls: 'sug' },
+    m.sat_fat_g != null && { k: 'Grasa sat.', v: `${r0(m.sat_fat_g)}g`, cls: 'sat' },
+    m.salt_g != null && { k: 'Sal', v: `${m.salt_g}g`, cls: 'salt' },
+  ].filter(Boolean) as { k: string; v: string; cls: string }[]
+  if (!items.length) return null
+  return (
+    <div className="fl-extra">
+      {items.map(i => <span key={i.k} className={`fl-ex ${i.cls}`}>{i.k} <b>{i.v}</b></span>)}
+    </div>
+  )
+}
+
 export default function FoodLog({ meals, today }: { meals: Meal[]; today: string }) {
   // group by date, preserving the desc order coming from the query
   const groups: { date: string; meals: Meal[] }[] = []
@@ -229,6 +281,13 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
                           <span className="m f">G {r0(m.fat_g ?? 0)}</span>
                         </div>
                       )}
+                      {(m.nutri_score || m.nova_group != null) && (
+                        <div className="fl-nutri">
+                          <NutriScore grade={m.nutri_score} />
+                          <NovaBadge group={m.nova_group} />
+                        </div>
+                      )}
+                      <NutriExtra m={m} />
                       {m.comment && <p className="fl-comment">“{m.comment}”</p>}
                     </div>
                   </motion.article>

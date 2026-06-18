@@ -29,5 +29,11 @@ export interface Meal {
   rating: number | null    // 1-5
   comment: string | null
   photo_url: string | null
+  nutri_score: string | null   // Open Food Facts grade 'a'..'e' (packaged items)
+  nova_group: number | null    // NOVA processing 1..4 (4 = ultra-processed)
+  fiber_g: number | null
+  sugar_g: number | null
+  sat_fat_g: number | null
+  salt_g: number | null
   created_at: string
 }

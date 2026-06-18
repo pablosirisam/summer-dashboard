@@ -573,3 +573,17 @@ b { font-weight: 600; color: var(--ink); }
 
 @media (max-width: 860px) { .fl-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .fl-grid { grid-template-columns: 1fr; } .fl-today-grid { gap: 18px; } .fl-macros { gap: 18px; } }
+
+/* ── Nutrition badges (Open Food Facts: Nutri-Score + NOVA) ─────── */
+.fl-nutri { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 2px; }
+.ns { display: inline-flex; align-items: center; gap: 7px; }
+.ns-label { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.ns-scale { display: inline-flex; gap: 2px; align-items: center; }
+.ns-scale span { display: grid; place-items: center; width: 15px; height: 17px; border-radius: 4px; font-family: var(--mono); font-weight: 700; font-size: 9.5px; color: var(--ink-3); background: rgba(255,255,255,0.06); transition: transform 0.2s; }
+.ns-scale span.on { color: #08110b; transform: scale(1.22); box-shadow: 0 3px 9px rgba(0,0,0,0.45); }
+.nova { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 99px; color: var(--nv); border: 1px solid color-mix(in srgb, var(--nv) 42%, transparent); background: color-mix(in srgb, var(--nv) 13%, transparent); }
+.fl-extra { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.fl-ex { font-family: var(--mono); font-size: 10.5px; padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--ink-3); }
+.fl-ex b { color: var(--ink-2); font-weight: 600; }
+.fl-ex.sat b, .fl-ex.salt b { color: var(--sport-2); }
+.fl-ex.sug b { color: #f0a8d0; }
