@@ -132,30 +132,34 @@ export default function ObjectiveDetail({ type, logs }: Props) {
       </div>
       <HeatmapGrid logs={logs} type={type} />
 
-      {/* Chronological history */}
-      <div className="sec-head">
-        <span className="sec-title"><span className="ic"><Calendar size={15} /></span>Historial completo</span>
-        <span className="sec-line" />
-      </div>
-      <div className="dt-log">
-        {items.map((p, i) => (
-          <motion.div key={p.date} className={`dt-row${p.completed ? ' done' : ''}`}
-            initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-30px' }}
-            transition={{ duration: 0.4, delay: Math.min(i * 0.025, 0.4), ease: EASE }}>
-            <div className="dt-row-date">
-              <span className="dt-row-d">{formatLogDateFull(p.date)}</span>
-              <span className="dt-row-wd">{weekdayShort(p.date)}</span>
-            </div>
-            <div className="dt-row-check">
-              {p.completed ? <Check size={14} strokeWidth={3} /> : <Minus size={14} strokeWidth={3} />}
-            </div>
-            <div className="dt-row-entry">{p.entry ?? '—'}</div>
-            <div className="dt-row-metric">{p.value > 0 ? `${p.value}${c.unit === 'min' ? ' min' : c.unit}` : '—'}</div>
-          </motion.div>
-        ))}
-        {!items.length && <div className="empty-state">Todavía no hay registros para este objetivo.</div>}
-      </div>
+      {/* Chronological history — hidden on IA (replaced by the learning roadmap) */}
+      {type !== 'ia' && (
+        <>
+          <div className="sec-head">
+            <span className="sec-title"><span className="ic"><Calendar size={15} /></span>Historial completo</span>
+            <span className="sec-line" />
+          </div>
+          <div className="dt-log">
+            {items.map((p, i) => (
+              <motion.div key={p.date} className={`dt-row${p.completed ? ' done' : ''}`}
+                initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-30px' }}
+                transition={{ duration: 0.4, delay: Math.min(i * 0.025, 0.4), ease: EASE }}>
+                <div className="dt-row-date">
+                  <span className="dt-row-d">{formatLogDateFull(p.date)}</span>
+                  <span className="dt-row-wd">{weekdayShort(p.date)}</span>
+                </div>
+                <div className="dt-row-check">
+                  {p.completed ? <Check size={14} strokeWidth={3} /> : <Minus size={14} strokeWidth={3} />}
+                </div>
+                <div className="dt-row-entry">{p.entry ?? '—'}</div>
+                <div className="dt-row-metric">{p.value > 0 ? `${p.value}${c.unit === 'min' ? ' min' : c.unit}` : '—'}</div>
+              </motion.div>
+            ))}
+            {!items.length && <div className="empty-state">Todavía no hay registros para este objetivo.</div>}
+          </div>
+        </>
+      )}
     </main>
   )
 }
