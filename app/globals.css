@@ -802,3 +802,18 @@ a.air-res:hover { background: rgba(var(--ia-glow), 0.14); border-color: rgba(var
 .aird-modal-sub { color: var(--ink-3); font-size: 12.5px; margin-bottom: 18px; }
 .aird-modal-list { display: flex; flex-direction: column; gap: 13px; }
 .aird-modal-list .air-topic { font-size: 17px; }
+
+/* ── sport variant: recolour the roadmap amber ───────────── */
+.air.is-sport { --ia-2: var(--sport-2); --ia-glow: var(--sport-glow); }
+.air-stats-4 { grid-template-columns: repeat(4, 1fr); }
+.air-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 7px;
+}
+.air-status.ok { color: var(--food-2); background: rgba(var(--food-glow), 0.12); border: 1px solid rgba(var(--food-glow), 0.3); }
+.air-status.no { color: var(--ink-3); background: var(--raise); border: 1px solid var(--line); }
+
+@media (max-width: 620px) {
+  .air-stats-4 { grid-template-columns: repeat(2, 1fr); }
+}

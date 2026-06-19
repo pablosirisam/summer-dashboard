@@ -132,8 +132,8 @@ export default function ObjectiveDetail({ type, logs }: Props) {
       </div>
       <HeatmapGrid logs={logs} type={type} />
 
-      {/* Chronological history — hidden on IA (replaced by the learning roadmap) */}
-      {type !== 'ia' && (
+      {/* Chronological history — hidden on IA & Deporte (replaced by their roadmaps) */}
+      {type !== 'ia' && type !== 'sport' && (
         <>
           <div className="sec-head">
             <span className="sec-title"><span className="ic"><Calendar size={15} /></span>Historial completo</span>
