@@ -37,3 +37,17 @@ export interface Meal {
   salt_g: number | null
   created_at: string
 }
+
+export interface AiProgress {
+  id: string
+  learned_on: string          // yyyy-MM-dd
+  tier: string | null         // 'T0' | 'T1' | 'T3' ...
+  topic: string
+  resource: string | null     // video / source title
+  resource_url: string | null
+  score: number | null        // quiz score x/10
+  summary: string | null      // key takeaway
+  kind: string                // 'lesson' | 'milestone'
+  sort_order: number
+  created_at: string
+}

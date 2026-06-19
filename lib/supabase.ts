@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { DailyLog, Meal } from '@/types'
+import type { DailyLog, Meal, AiProgress } from '@/types'
 
 export function getSupabase() {
   return createClient(
@@ -22,4 +22,13 @@ export async function getMeals(): Promise<Meal[]> {
     .select('*')
     .order('meal_time', { ascending: false })
   return (data ?? []) as Meal[]
+}
+
+export async function getAiProgress(): Promise<AiProgress[]> {
+  const { data } = await getSupabase()
+    .from('ai_progress')
+    .select('*')
+    .order('learned_on', { ascending: true })
+    .order('sort_order', { ascending: true })
+  return (data ?? []) as AiProgress[]
 }

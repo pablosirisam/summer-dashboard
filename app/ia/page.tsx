@@ -1,9 +1,15 @@
-import { getAllLogs } from '@/lib/supabase'
+import { getAllLogs, getAiProgress } from '@/lib/supabase'
 import ObjectiveDetail from '@/components/ObjectiveDetail'
+import AiRoadmap from '@/components/AiRoadmap'
 
 export const revalidate = 0
 
 export default async function IaPage() {
-  const logs = await getAllLogs()
-  return <ObjectiveDetail type="ia" logs={logs} />
+  const [logs, progress] = await Promise.all([getAllLogs(), getAiProgress()])
+  return (
+    <>
+      <ObjectiveDetail type="ia" logs={logs} />
+      <AiRoadmap items={progress} />
+    </>
+  )
 }
