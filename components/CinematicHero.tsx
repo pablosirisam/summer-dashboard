@@ -50,7 +50,7 @@ export default function CinematicHero({ remaining, elapsed, total, dateLabel }: 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
           >
-            <span className="cine-dot" /> {dateLabel} · día {elapsed + 1} de {total}
+            <span className="cine-dot" /> {dateLabel} · día {Math.min(elapsed + 1, total)} de {total}
           </motion.p>
 
           <h1 className="cine-title">

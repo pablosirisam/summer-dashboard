@@ -13,11 +13,9 @@ export const TOTAL_DAYS   = differenceInDays(UNI_START, SUMMER_START) // 75
 
 export type CompletedField = 'ia_completed' | 'food_completed' | 'sport_completed'
 
-/** Today in Spain (CEST, UTC+2) as a yyyy-MM-dd string. */
+/** Today in Spain as a yyyy-MM-dd string, correct on any server timezone/DST. */
 export function spainToday(): string {
-  const now = new Date()
-  const spain = new Date(now.getTime() + 2 * 60 * 60 * 1000)
-  return format(spain, 'yyyy-MM-dd')
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
 }
 
 /** Days left until uni (Sep 1). On Jun 18 → 75. Counts today as a remaining day. */
@@ -42,11 +40,11 @@ export function summerDates(): string[] {
   )
 }
 
-/** Current streak counting back from today (grace: today unlogged doesn't break it). */
+/** Current streak counting back from today (grace: today still-incomplete doesn't break it — the day isn't over). */
 export function getStreak(logs: DailyLog[], field: CompletedField): number {
   const map = new Map(logs.map(l => [l.log_date, l]))
   const today = spainToday()
-  const start = map.has(today) ? 0 : 1
+  const start = map.get(today)?.[field] ? 0 : 1
   let streak = 0
   const base = new Date(today + 'T00:00:00')
   for (let i = start; i < TOTAL_DAYS; i++) {
@@ -58,11 +56,17 @@ export function getStreak(logs: DailyLog[], field: CompletedField): number {
   return streak
 }
 
+/** Best streak of consecutive CALENDAR days — a day with no row breaks it too. */
 export function getBestStreak(logs: DailyLog[], field: CompletedField): number {
   const sorted = [...logs].sort((a, b) => a.log_date.localeCompare(b.log_date))
-  let best = 0, cur = 0
+  let best = 0, cur = 0, prev: string | null = null
   for (const log of sorted) {
-    if (log[field]) { cur++; best = Math.max(best, cur) } else cur = 0
+    const gap = prev !== null &&
+      format(addDays(new Date(prev + 'T00:00:00'), 1), 'yyyy-MM-dd') !== log.log_date
+    if (gap) cur = 0
+    cur = log[field] ? cur + 1 : 0
+    if (cur > best) best = cur
+    prev = log.log_date
   }
   return best
 }
@@ -91,15 +95,26 @@ export function getAvgFoodRating(logs: DailyLog[]): number {
   return Math.round((rated.reduce((s, l) => s + (l.food_rating || 0), 0) / rated.length) * 10) / 10
 }
 
+// ── Spanish date labels — single source for every component ─────
+export const MONTHS_ES       = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+export const MONTHS_ES_LOWER = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+export const MONTHS_ES_FULL  = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+export const WEEKDAYS_ES     = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+/** "2 Jul" */
 export function formatLogDate(dateStr: string): string {
   const [, m, d] = dateStr.split('-').map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
+  return `${d} ${MONTHS_ES[m - 1]}`
+}
+
+/** "2 de julio de 2026" — modal headers. */
+export function formatLogDateLong(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return `${d} de ${MONTHS_ES_FULL[m - 1]} de ${y}`
 }
 
 export function weekdayShort(dateStr: string): string {
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-  return days[new Date(dateStr + 'T00:00:00').getDay()]
+  return WEEKDAYS_ES[new Date(dateStr + 'T00:00:00').getDay()]
 }
 
 export function completedCountForLog(log: DailyLog): number {
@@ -186,8 +201,8 @@ export function getMetricTrend(logs: DailyLog[], type: ObjType, window = 7): Tre
   return { dir: pct > 5 ? 'up' : pct < -5 ? 'down' : 'flat', pct }
 }
 
+/** "2 jul" — lowercase variant used inside cards and tooltips. */
 export function formatLogDateFull(dateStr: string): string {
   const [, m, d] = dateStr.split('-').map(Number)
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${d} ${months[m - 1]}`
+  return `${d} ${MONTHS_ES_LOWER[m - 1]}`
 }
