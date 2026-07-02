@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import type { SeriesPoint } from '@/lib/utils'
+import { formatLogDateFull, type SeriesPoint } from '@/lib/utils'
 
 interface Props {
   data: SeriesPoint[]
@@ -109,15 +109,9 @@ export default function EvolutionChart({ data, accent, glow, unit, yMax }: Props
           ['--c' as string]: accent,
         }}>
           <b>{hp.value}{unit}</b>
-          <i>{fmt(hp.date)}</i>
+          <i>{formatLogDateFull(hp.date)}</i>
         </div>
       )}
     </div>
   )
-}
-
-function fmt(d: string) {
-  const [, m, day] = d.split('-').map(Number)
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${day} ${months[m - 1]}`
 }

@@ -64,25 +64,26 @@ export default function ObjectiveCard({ type, logs, index }: Props) {
   const trend = getMetricTrend(logs, ot)
   const sparkVals = getSeries(logs, ot).filter(p => p.value > 0).map(p => p.value).slice(-16)
 
-  let foot: { v: string; k: string }[]
+  let foot: { v: string; k: string; record?: boolean }[]
   if (type === 'ia') {
     foot = [
       { v: `${avgMetric}h`, k: 'media/día' },
       { v: String(activeDays), k: 'días activos' },
-      { v: bestDay ? `${bestDay.value}h` : '—', k: 'mejor' },
+      { v: bestDay ? `${bestDay.value}h` : '—', k: 'mejor', record: !!bestDay },
     ]
   } else if (type === 'food') {
     const goodDays = logs.filter(l => (l.food_rating ?? 0) >= 4).length
     foot = [
       { v: String(activeDays), k: 'días valorados' },
       { v: String(goodDays), k: 'días ≥4★' },
-      { v: bestDay ? `${bestDay.value}★` : '—', k: 'mejor' },
+      { v: bestDay ? `${bestDay.value}★` : '—', k: 'mejor', record: !!bestDay },
     ]
   } else {
+    const bestStreak = getBestStreak(logs, c.field)
     foot = [
       { v: String(getCompletionCount(logs, c.field)), k: 'días ✓' },
       { v: String(streak), k: 'racha' },
-      { v: String(getBestStreak(logs, c.field)), k: 'mejor' },
+      { v: String(bestStreak), k: 'mejor', record: bestStreak > 0 },
     ]
   }
 
@@ -92,7 +93,7 @@ export default function ObjectiveCard({ type, logs, index }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 26 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.55, delay: index * 0.1, ease: EASE }}
     >
@@ -137,7 +138,7 @@ export default function ObjectiveCard({ type, logs, index }: Props) {
               <motion.div
                 className="bar-fill"
                 initial={{ width: 0 }}
-                animate={{ width: `${consist}%` }}
+                whileInView={{ width: `${consist}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.2, delay: 0.3 + index * 0.1, ease: EASE }}
               />
@@ -155,7 +156,7 @@ export default function ObjectiveCard({ type, logs, index }: Props) {
 
         <div className="oc-foot">
           {foot.map((s, i) => (
-            <div key={i} className="oc-stat"><span className="v">{s.v}</span><span className="k">{s.k}</span></div>
+            <div key={i} className="oc-stat"><span className={`v${s.record ? ' record' : ''}`}>{s.v}</span><span className="k">{s.k}</span></div>
           ))}
         </div>
 

@@ -3,16 +3,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Sparkles, Home, Brain, Salad, Dumbbell, CalendarRange, type LucideIcon } from 'lucide-react'
+import { Sparkles, Home, CalendarRange, type LucideIcon } from 'lucide-react'
+import { OBJECTIVES } from '@/lib/objectives'
 
 interface NavItem { href: string; label: string; icon: LucideIcon; lk: string }
 
 const ITEMS: NavItem[] = [
-  { href: '/',             label: 'Inicio',       icon: Home,         lk: '#818cf8' },
-  { href: '/ia',           label: 'IA',           icon: Brain,        lk: '#818cf8' },
-  { href: '/alimentacion', label: 'Alimentación', icon: Salad,        lk: '#34e6a0' },
-  { href: '/deporte',      label: 'Deporte',      icon: Dumbbell,     lk: '#fbbf24' },
-  { href: '/historial',    label: 'Historial',    icon: CalendarRange, lk: '#818cf8' },
+  { href: '/',             label: 'Inicio',       icon: Home,          lk: OBJECTIVES.ia.accent2 },
+  { href: '/ia',           label: 'IA',           icon: OBJECTIVES.ia.icon,    lk: OBJECTIVES.ia.accent2 },
+  { href: '/alimentacion', label: 'Alimentación', icon: OBJECTIVES.food.icon,  lk: OBJECTIVES.food.accent2 },
+  { href: '/deporte',      label: 'Deporte',      icon: OBJECTIVES.sport.icon, lk: OBJECTIVES.sport.accent2 },
+  { href: '/historial',    label: 'Historial',    icon: CalendarRange, lk: OBJECTIVES.ia.accent2 },
 ]
 
 export default function NavBar() {

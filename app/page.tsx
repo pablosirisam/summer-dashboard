@@ -1,8 +1,10 @@
+import { preload } from 'react-dom'
 import { Target, CalendarRange, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { getAllLogs } from '@/lib/supabase'
 import {
   getDaysRemaining, getDaysElapsed, getSummerProgress, TOTAL_DAYS, spainToday,
+  weekdayShort, MONTHS_ES,
 } from '@/lib/utils'
 import CinematicHero from '@/components/CinematicHero'
 import Countdown from '@/components/Countdown'
@@ -11,20 +13,20 @@ import HeatmapGrid from '@/components/HeatmapGrid'
 
 export const revalidate = 0
 
-const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-const WDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-
 export default async function Home() {
+  // La foto del hero es el LCP: que empiece a bajar con el HTML, no tras el CSS.
+  preload('/hero/summit.jpg', { as: 'image', fetchPriority: 'high' })
+
   const logs = await getAllLogs()
 
   const today = spainToday()
   const [y, m, d] = today.split('-').map(Number)
-  const wd = WDAYS[new Date(today + 'T00:00:00').getDay()]
-  const dateLabel = `${wd} ${d} ${MONTHS[m - 1]} ${y}`
+  const dateLabel = `${weekdayShort(today)} ${d} ${MONTHS_ES[m - 1]} ${y}`
 
   const remaining = getDaysRemaining()
   const elapsed = getDaysElapsed()
   const progress = getSummerProgress()
+  const todayLog = logs.find(l => l.log_date === today) ?? null
 
   return (
     <>
@@ -32,7 +34,7 @@ export default async function Home() {
 
       <div className="overview">
         <main className="page">
-          <Countdown remaining={remaining} total={TOTAL_DAYS} elapsed={elapsed} progress={progress} />
+          <Countdown remaining={remaining} progress={progress} todayLog={todayLog} />
 
           <div className="sec-head">
             <span className="sec-title"><span className="ic"><Target size={15} /></span>Objetivos del verano</span>

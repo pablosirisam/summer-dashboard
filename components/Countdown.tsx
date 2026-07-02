@@ -1,19 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Brain, Salad, Dumbbell } from 'lucide-react'
+import type { DailyLog } from '@/types'
 
 interface Props {
   remaining: number
-  total: number
-  elapsed: number
   progress: number
+  todayLog: DailyLog | null
 }
 
-function useCountUp(target: number, run: boolean, ms = 1400) {
+function useCountUp(target: number, ms = 1400) {
   const [val, setVal] = useState(0)
   useEffect(() => {
-    if (!run) return
     let raf = 0
     let startTs: number | null = null
     const tick = (ts: number) => {
@@ -26,18 +26,23 @@ function useCountUp(target: number, run: boolean, ms = 1400) {
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [target, run, ms])
+  }, [target, ms])
   return val
 }
 
-export default function Countdown({ remaining, total, elapsed, progress }: Props) {
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true })
-  const num = useCountUp(remaining, true)
-  const pct = useCountUp(Math.round(progress), true, 1600)
+export default function Countdown({ remaining, progress, todayLog }: Props) {
+  const num = useCountUp(remaining)
+  const pct = useCountUp(Math.round(progress), 1600)
+
+  // El parte de hoy, legible sin ir al ticker: responde «¿cómo voy?» en el primer scroll.
+  const pills = [
+    { Icon: Brain,    k: 'IA',      v: todayLog?.ia_hours ? `${todayLog.ia_hours}h` : '—',            on: !!todayLog?.ia_completed },
+    { Icon: Salad,    k: 'COMIDA',  v: todayLog?.food_rating ? `${todayLog.food_rating}★` : '—',      on: !!todayLog?.food_completed },
+    { Icon: Dumbbell, k: 'DEPORTE', v: todayLog?.sport_minutes ? `${todayLog.sport_minutes}min` : '—', on: !!todayLog?.sport_completed },
+  ]
 
   return (
-    <section className="hero" ref={ref}>
+    <section className="hero">
       <div className="hero-beam" />
       <p className="hero-eyebrow">VERANO 2026 · <b>cuenta atrás hasta la uni</b></p>
 
@@ -60,13 +65,26 @@ export default function Countdown({ remaining, total, elapsed, progress }: Props
         </motion.p>
       </div>
 
-      <div className="hero-meta">
-        <span><b>{elapsed}</b> vividos</span>
-        <span className="dot" />
-        <span><b>{remaining}</b> por delante</span>
-        <span className="dot" />
-        <span><b>{total}</b> días totales</span>
-      </div>
+      <motion.div
+        className="today-pills"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <span className="tp-tag">EL PARTE DE HOY</span>
+        {todayLog ? (
+          pills.map(({ Icon, k, v, on }) => (
+            <span key={k} className={`tp-pill${on ? ' on' : ''}`}>
+              <Icon size={13} strokeWidth={2.2} />
+              <i>{k}</i>
+              <b>{v}</b>
+              <span className="tp-mark">{on ? '▲' : '·'}</span>
+            </span>
+          ))
+        ) : (
+          <span className="tp-empty">sin parte aún — el día es tuyo</span>
+        )}
+      </motion.div>
 
       <div className="hero-progress">
         <div className="hp-track">

@@ -1,10 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Brain, Salad, Dumbbell, Flame, Check, Minus, TrendingUp, TrendingDown, Calendar, Award, CalendarRange, type LucideIcon } from 'lucide-react'
+import { Flame, Check, Minus, TrendingUp, TrendingDown, Calendar, Award, CalendarRange } from 'lucide-react'
 import type { DailyLog } from '@/types'
 import EvolutionChart from './EvolutionChart'
 import HeatmapGrid from './HeatmapGrid'
+import { OBJECTIVES } from '@/lib/objectives'
 import {
   type ObjType, getSeries, getMetricTotal, getMetricAvg, getBestDay,
   getStreak, getBestStreak, getCompletionCount, getConsistency,
@@ -16,19 +17,17 @@ interface Props { type: ObjType; logs: DailyLog[] }
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-const CFG: Record<ObjType, {
-  label: string; tag: string; icon: LucideIcon
-  accent: string; accent2: string; glow: string; unit: string
-  yMax?: number
-}> = {
-  ia:    { label: 'Inteligencia Artificial', tag: 'Horas de trabajo real',  icon: Brain,    accent: '#6366f1', accent2: '#818cf8', glow: '99,102,241',  unit: 'h' },
-  food:  { label: 'Alimentación',            tag: 'Calidad de la dieta',    icon: Salad,    accent: '#10d98b', accent2: '#34e6a0', glow: '16,217,139',  unit: '★', yMax: 5 },
-  sport: { label: 'Deporte',                 tag: 'Minutos en movimiento',  icon: Dumbbell, accent: '#fb923c', accent2: '#fbbf24', glow: '251,146,60',  unit: 'min' },
+// Solo lo específico de esta vista; la identidad (color/icono/label) vive en OBJECTIVES.
+const VIEW: Record<ObjType, { tag: string; unit: string; yMax?: number }> = {
+  ia:    { tag: 'Horas de trabajo real', unit: 'h' },
+  food:  { tag: 'Calidad de la dieta',   unit: '★', yMax: 5 },
+  sport: { tag: 'Minutos en movimiento', unit: 'min' },
 }
 
 export default function ObjectiveDetail({ type, logs }: Props) {
-  const c = CFG[type]
-  const Icon = c.icon
+  const obj = OBJECTIVES[type]
+  const c = { ...VIEW[type], label: obj.label, accent: obj.accent, accent2: obj.accent2, glow: obj.glow }
+  const Icon = obj.icon
   const field = completedField(type)
 
   const isStreak = type === 'sport'
@@ -61,18 +60,19 @@ export default function ObjectiveDetail({ type, logs }: Props) {
 
   const TrendIcon = trend?.dir === 'up' ? TrendingUp : trend?.dir === 'down' ? TrendingDown : Minus
   // Deporte → constancia (binario). IA → evolución (seguimiento para mejorar).
+  // record: true → el valor se viste de oro (--gold es solo para récords personales)
   const stats = isStreak
     ? [
         { icon: Check,      v: `${done}`,     k: 'días completados', sub: `de ${logs.length} registrados` },
-        { icon: Flame,      v: `${streak}`,   k: 'racha actual',     sub: streak === best && best > 0 ? '¡tu mejor racha!' : `máxima: ${best}` },
+        { icon: Flame,      v: `${streak}`,   k: 'racha actual',     sub: streak === best && best > 0 ? '¡tu mejor racha!' : `máxima: ${best}`, record: streak === best && best > 0 },
         { icon: TrendingUp, v: `${consist}%`, k: 'constancia',       sub: avgLabel },
-        { icon: Award,      v: bestLabel,     k: 'mejor día',        sub: bestDay ? formatLogDateFull(bestDay.date) : '—' },
+        { icon: Award,      v: bestLabel,     k: 'mejor día',        sub: bestDay ? formatLogDateFull(bestDay.date) : '—', record: !!bestDay },
       ]
     : [
         { icon: Calendar,   v: `${activeDays}`,   k: 'días activos',  sub: `de ${logs.length} registrados` },
         { icon: TrendingUp, v: `${avg}${c.unit}`, k: 'media por día', sub: 'cuando te pones a ello' },
         { icon: TrendIcon,  v: trend ? `${trend.pct > 0 ? '+' : ''}${trend.pct}%` : '—', k: 'tendencia', sub: trend ? 'últimos 7 días vs. previos' : 'aún sin datos' },
-        { icon: Award,      v: bestLabel,         k: 'mejor sesión',  sub: bestDay ? formatLogDateFull(bestDay.date) : '—' },
+        { icon: Award,      v: bestLabel,         k: 'mejor sesión',  sub: bestDay ? formatLogDateFull(bestDay.date) : '—', record: !!bestDay },
       ]
 
   const items = [...series].reverse()
@@ -106,7 +106,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 + i * 0.07, ease: EASE }}>
               <div className="dt-stat-ic"><SIcon size={16} strokeWidth={2.2} /></div>
-              <div className="dt-stat-v">{s.v}</div>
+              <div className={`dt-stat-v${'record' in s && s.record ? ' record' : ''}`}>{s.v}</div>
               <div className="dt-stat-k">{s.k}</div>
               <div className="dt-stat-sub">{s.sub}</div>
             </motion.div>
@@ -116,7 +116,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
 
       {/* Chart */}
       <motion.section className="dt-panel"
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.6, ease: EASE }}>
         <div className="dt-panel-head">
           <span className="dt-panel-title"><TrendingUp size={15} /> Evolución</span>
@@ -142,7 +142,7 @@ export default function ObjectiveDetail({ type, logs }: Props) {
           <div className="dt-log">
             {items.map((p, i) => (
               <motion.div key={p.date} className={`dt-row${p.completed ? ' done' : ''}`}
-                initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: -14 }} whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: '-30px' }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.025, 0.4), ease: EASE }}>
                 <div className="dt-row-date">

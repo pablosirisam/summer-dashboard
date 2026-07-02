@@ -1,9 +1,11 @@
+import type { Metadata } from 'next'
 import { CalendarRange, Activity } from 'lucide-react'
 import { getAllLogs } from '@/lib/supabase'
 import { completedCountForLog } from '@/lib/utils'
 import Timeline from '@/components/Timeline'
 
 export const revalidate = 0
+export const metadata: Metadata = { title: 'Historial' }
 
 export default async function HistorialPage() {
   const logs = await getAllLogs()

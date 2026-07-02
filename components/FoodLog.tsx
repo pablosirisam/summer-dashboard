@@ -150,7 +150,7 @@ function MacroDonut({ p, c, f }: { p: number; c: number; f: number }) {
   const pc = p * 4, cc = c * 4, fc = f * 9
   const tot = pc + cc + fc || 1
   const segs = [
-    { v: pc / tot, color: '#34e6a6' },
+    { v: pc / tot, color: '#38e6a6' },
     { v: cc / tot, color: '#818cf8' },
     { v: fc / tot, color: '#fbbf24' },
   ]
@@ -244,7 +244,7 @@ function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
   const p = m.protein_g ?? 0, c = m.carbs_g ?? 0, f = m.fat_g ?? 0
   const etot = p * 4 + c * 4 + f * 9 || 1
   const legend = [
-    { k: 'Proteínas', g: p, pct: Math.round((p * 4 / etot) * 100), color: '#34e6a6' },
+    { k: 'Proteínas', g: p, pct: Math.round((p * 4 / etot) * 100), color: '#38e6a6' },
     { k: 'Carbohidratos', g: c, pct: Math.round((c * 4 / etot) * 100), color: '#818cf8' },
     { k: 'Grasas', g: f, pct: Math.round((f * 9 / etot) * 100), color: '#fbbf24' },
   ]
@@ -313,12 +313,12 @@ function MealDetail({ meal: m, onClose }: { meal: Meal; onClose: () => void }) {
             <div className="md-block-h">Información nutricional <i>· % de tu objetivo diario ({PROFILE.weightKg} kg · {PHASE_LABEL[PROFILE.phase].toLowerCase()})</i></div>
             <div className="md-facts">
               <Fact label="Energía" value={m.kcal} unit=" kcal" ri={T.kcal} accent="var(--food-2)" />
-              <Fact label="Proteínas" value={m.protein_g} unit="g" ri={T.protein.value} accent="#34e6a6" />
+              <Fact label="Proteínas" value={m.protein_g} unit="g" ri={T.protein.value} accent="#38e6a6" />
               <Fact label="Hidratos de carbono" value={m.carbs_g} unit="g" ri={T.carbs.value} accent="#818cf8" />
               <Fact label="de los cuales azúcares" value={m.sugar_g} unit="g" ri={T.sugar.value} accent="#f0a8d0" sub />
               <Fact label="Grasas" value={m.fat_g} unit="g" ri={T.fat.value} accent="#fbbf24" />
               <Fact label="de las cuales saturadas" value={m.sat_fat_g} unit="g" ri={T.satFat.value} accent="#fb923c" sub />
-              <Fact label="Fibra" value={m.fiber_g} unit="g" ri={T.fiber.value} accent="#34e6a6" />
+              <Fact label="Fibra" value={m.fiber_g} unit="g" ri={T.fiber.value} accent="#38e6a6" />
               <Fact label="Sal" value={m.salt_g} unit="g" ri={T.salt.value} accent="#fbbf24" />
             </div>
           </div>
@@ -541,6 +541,8 @@ export default function FoodLog({ meals, today }: { meals: Meal[]; today: string
       <AnimatePresence>
         {selected && <MealDetail meal={selected} onClose={() => setSelected(null)} />}
       </AnimatePresence>
+
+      <div className="footer">SIRI · VERANO 2026 — 18 JUN → 1 SEP · datos en vivo desde Supabase</div>
     </main>
   )
 }

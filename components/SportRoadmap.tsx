@@ -6,20 +6,11 @@ import {
   Dumbbell, Activity, Timer, Flame, ChevronRight, X, Check,
 } from 'lucide-react'
 import type { DailyLog } from '@/types'
-import { getStreak, weekdayShort } from '@/lib/utils'
+import { getStreak, weekdayShort, formatLogDateFull, formatLogDateLong } from '@/lib/utils'
+import { useDialog } from './useDialog'
 
 const EASE = [0.16, 1, 0.3, 1] as const
-const MON = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-const MON_FULL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
-function fmtDate(d: string) {
-  const [, m, day] = d.split('-').map(Number)
-  return `${day} ${MON[(m ?? 1) - 1]}`
-}
-function fmtDateFull(d: string) {
-  const [y, m, day] = d.split('-').map(Number)
-  return `${day} de ${MON_FULL[(m ?? 1) - 1]} de ${y}`
-}
 function fmtMin(t: number) {
   const h = Math.floor(t / 60), m = t % 60
   return h ? `${h}h ${m ? `${m}m` : ''}`.trim() : `${m} min`
@@ -27,12 +18,27 @@ function fmtMin(t: number) {
 
 export default function SportRoadmap({ logs }: { logs: DailyLog[] }) {
   const [open, setOpen] = useState<string | null>(null)
+  useDialog(open !== null, () => setOpen(null))
 
   const days = logs
     .filter(l => (l.sport_entry && l.sport_entry.trim()) || l.sport_minutes > 0)
     .sort((a, b) => (a.log_date < b.log_date ? 1 : -1))
 
-  if (!days.length) return null
+  // Nunca una página en negro: sin sesiones, la bitácora se presenta igualmente.
+  if (!days.length) {
+    return (
+      <section className="air is-sport">
+        <div className="air-head">
+          <span className="air-kicker"><Dumbbell size={13} /> Bitácora de entreno</span>
+          <h2 className="air-title">Cada sesión, <em>registrada</em>.</h2>
+          <p className="air-sub">Todo el movimiento del verano, día a día.</p>
+        </div>
+        <div className="empty-state">
+          Todavía no hay sesiones registradas. Cuéntame tu próximo entreno y aparecerá aquí. 🏋️
+        </div>
+      </section>
+    )
+  }
 
   const sessions = days.length
   const totalMin = days.reduce((s, l) => s + (l.sport_minutes || 0), 0)
@@ -81,7 +87,7 @@ export default function SportRoadmap({ logs }: { logs: DailyLog[] }) {
             <span className="air-dot"><Dumbbell size={11} /></span>
             <div className="aird-day-card">
               <div className="aird-day-top">
-                <span className="aird-day-date">{fmtDate(l.log_date)}</span>
+                <span className="aird-day-date">{formatLogDateFull(l.log_date)}</span>
                 <span className="aird-day-go">Ver detalle <ChevronRight size={14} /></span>
               </div>
               <div className="aird-chips">
@@ -101,6 +107,7 @@ export default function SportRoadmap({ logs }: { logs: DailyLog[] }) {
           <motion.div
             className="aird-overlay"
             onClick={() => setOpen(null)}
+            role="dialog" aria-modal="true" aria-label={`Sesión de deporte · ${formatLogDateLong(open)}`}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           >
             <motion.div
@@ -113,7 +120,7 @@ export default function SportRoadmap({ logs }: { logs: DailyLog[] }) {
             >
               <button className="aird-close" onClick={() => setOpen(null)} aria-label="Cerrar"><X size={18} /></button>
               <span className="air-kicker"><Dumbbell size={13} /> Sesión de deporte</span>
-              <h3 className="aird-modal-title">{fmtDateFull(open)}</h3>
+              <h3 className="aird-modal-title">{formatLogDateLong(open)}</h3>
               <p className="aird-modal-sub">{weekdayShort(open)}</p>
               <div className="aird-modal-list">
                 <article className="air-card">

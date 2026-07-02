@@ -7,19 +7,11 @@ import {
   ChevronRight, X,
 } from 'lucide-react'
 import type { AiProgress } from '@/types'
+import { formatLogDateFull, formatLogDateLong } from '@/lib/utils'
+import { useDialog } from './useDialog'
 
 const EASE = [0.16, 1, 0.3, 1] as const
-const MON = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-const MON_FULL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
-function fmtDate(d: string) {
-  const [, m, day] = d.split('-').map(Number)
-  return `${day} ${MON[(m ?? 1) - 1]}`
-}
-function fmtDateFull(d: string) {
-  const [y, m, day] = d.split('-').map(Number)
-  return `${day} de ${MON_FULL[(m ?? 1) - 1]} de ${y}`
-}
 function avgOf(rows: AiProgress[]) {
   const s = rows.filter(r => r.score != null)
   return s.length ? s.reduce((a, r) => a + (r.score ?? 0), 0) / s.length : null
@@ -55,6 +47,7 @@ function ProgressCard({ it }: { it: AiProgress }) {
 
 export default function AiRoadmap({ items }: { items: AiProgress[] }) {
   const [openDay, setOpenDay] = useState<string | null>(null)
+  useDialog(openDay !== null, () => setOpenDay(null))
 
   if (!items.length) return null
 
@@ -128,7 +121,7 @@ export default function AiRoadmap({ items }: { items: AiProgress[] }) {
               <span className="air-dot"><CalendarDays size={12} /></span>
               <div className="aird-day-card">
                 <div className="aird-day-top">
-                  <span className="aird-day-date">{fmtDate(d)}</span>
+                  <span className="aird-day-date">{formatLogDateFull(d)}</span>
                   <span className="aird-day-go">Ver detalle <ChevronRight size={14} /></span>
                 </div>
                 <div className="aird-chips">
@@ -149,6 +142,7 @@ export default function AiRoadmap({ items }: { items: AiProgress[] }) {
           <motion.div
             className="aird-overlay"
             onClick={() => setOpenDay(null)}
+            role="dialog" aria-modal="true" aria-label={`Sesión de IA · ${formatLogDateLong(openDay)}`}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           >
             <motion.div
@@ -161,7 +155,7 @@ export default function AiRoadmap({ items }: { items: AiProgress[] }) {
             >
               <button className="aird-close" onClick={() => setOpenDay(null)} aria-label="Cerrar"><X size={18} /></button>
               <span className="air-kicker"><CalendarDays size={13} /> Sesión de IA</span>
-              <h3 className="aird-modal-title">{fmtDateFull(openDay)}</h3>
+              <h3 className="aird-modal-title">{formatLogDateLong(openDay)}</h3>
               <p className="aird-modal-sub">{openItems.length} entrada{openItems.length === 1 ? '' : 's'} · lo que se aprendió y se demostró</p>
               <div className="aird-modal-list">
                 {openItems.map(it => <ProgressCard key={it.id} it={it} />)}

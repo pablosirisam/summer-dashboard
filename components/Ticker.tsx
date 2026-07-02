@@ -9,8 +9,7 @@ export interface TickerSnap {
   ia: { v: string; on: boolean }
   food: { v: string; on: boolean }
   sport: { v: string; on: boolean }
-  streak: number
-  done: number // 0..3 objetivos cumplidos ese día
+  streak: number // racha actual de deporte (único objetivo en modo 'streak')
 }
 
 /**
@@ -53,7 +52,7 @@ export default function Ticker({ snap }: { snap: TickerSnap | null }) {
         <span className="tape-streak">
           <Flame size={12} strokeWidth={2.4} />
           <b>{snap.streak}</b>
-          <i>RACHA</i>
+          <i>RACHA DEPORTE</i>
         </span>
       </div>
     </motion.div>
