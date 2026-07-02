@@ -14,6 +14,9 @@ export default function SmoothScroll() {
       touchMultiplier: 1.6,
     })
 
+    // Los saltos a ancla (#fecha) deben pasar por lenis.scrollTo — el nativo lo pisa el raf.
+    ;(window as unknown as { __lenis?: Lenis }).__lenis = lenis
+
     let raf = 0
     const loop = (time: number) => {
       lenis.raf(time)
@@ -23,6 +26,7 @@ export default function SmoothScroll() {
 
     return () => {
       cancelAnimationFrame(raf)
+      delete (window as unknown as { __lenis?: Lenis }).__lenis
       lenis.destroy()
     }
   }, [])

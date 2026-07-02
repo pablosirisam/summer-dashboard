@@ -601,11 +601,10 @@ b { font-weight: 600; color: var(--ink); }
 }
 
 /* ── DATOS SIEMPRE EN MONO — identidad terminal ──────────── */
-.oc-big, .hs-v, .dt-big, .dt-stat-v, .fl-today-kcal .v, .md-donut-c b,
-.air-stat b, .air-score {
+/* (.air-stat b y .air-score se fijan en su propia sección) */
+.oc-big, .hs-v, .dt-big, .dt-stat-v, .fl-today-kcal .v, .md-donut-c b {
   font-family: var(--mono);
 }
-.air-stat b, .air-score { font-weight: 700; }
 
 /* Oro: solo récords personales */
 .dt-stat-v.record, .oc-stat .v.record { color: var(--gold); }
@@ -797,7 +796,7 @@ b { font-weight: 600; color: var(--ink); }
   background: linear-gradient(180deg, var(--panel-2), var(--panel));
 }
 .air-stat svg { color: var(--ia-2); margin-bottom: 3px; }
-.air-stat b { font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1; }
+.air-stat b { font-family: var(--mono); font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .air-stat span { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
 
 .air-track { position: relative; max-width: 760px; margin: 0 auto; padding-left: 30px; }
@@ -837,7 +836,7 @@ b { font-weight: 600; color: var(--ink); }
   background: rgba(var(--gold-glow), 0.12); border: 1px solid rgba(var(--gold-glow), 0.3);
 }
 .air-date { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
-.air-score { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1; white-space: nowrap; }
+.air-score { font-family: var(--mono); font-size: 18px; font-weight: 700; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .air-score i { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--ink-3); font-weight: 400; }
 .air-score.shi { color: var(--food-2); }
 .air-score.smid { color: var(--ia-2); }

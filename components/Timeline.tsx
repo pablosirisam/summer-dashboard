@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { StickyNote } from 'lucide-react'
 import { differenceInDays } from 'date-fns'
@@ -49,6 +50,21 @@ function weekSummary(weekLogs: DailyLog[]): string {
 
 export default function Timeline({ logs }: Props) {
   const items = [...logs].sort((a, b) => b.log_date.localeCompare(a.log_date))
+
+  // Ancla #yyyy-MM-dd (desde el tooltip del heatmap): Lenis se come el scroll
+  // nativo al hash, así que lo hacemos a mano tras montar.
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(hash)) return
+    const el = document.getElementById(hash)
+    if (!el) return
+    const t = setTimeout(() => {
+      const lenis = (window as unknown as { __lenis?: { scrollTo: (el: HTMLElement, o: object) => void } }).__lenis
+      if (lenis) lenis.scrollTo(el, { offset: -118, immediate: true })
+      else el.scrollIntoView({ block: 'start', behavior: 'auto' })
+    }, 120)
+    return () => clearTimeout(t)
+  }, [])
 
   if (!items.length) {
     return <div className="empty-state">El registro diario aparecerá aquí en cuanto empieces a reportar tus días.</div>
