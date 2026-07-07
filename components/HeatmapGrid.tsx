@@ -158,7 +158,7 @@ export default function HeatmapGrid({ logs, type, interactive }: Props) {
       const consistAvg = logged > 0 ? Math.round((totalCompletions / (logged * 3)) * 100) : 0
       sideStats = [
         { v: String(logged), u: ` / ${TOTAL_DAYS}`, k: 'días registrados', cls: 'indigo' },
-        { v: String(perfect), k: 'días perfectos (3/3)', cls: 'green' },
+        { v: String(perfect), k: 'días perfectos (3/3)', cls: 'red' },
         { v: String(bestStreak), k: 'mejor racha', cls: bestStreak > 0 ? 'gold' : 'amber' },
         { v: String(consistAvg), u: '%', k: 'consistencia media' },
       ]
